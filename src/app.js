@@ -2,15 +2,15 @@ const express = require('express');
 const axios = require('axios');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const firebaseConfig = require('./config/firebase');
-const errorMiddleware = require('./middlewares/errorMiddleware');
+const firebaseConfig = require('../config/firebase');
+const errorMiddleware = require('../middlewares/errorMiddleware');
 
 const app = express();
 
 // Routes
-const authRoutes = require('./routes/authRoutes');
-const imageRoutes = require('./routes/imageRoutes');
-const chatRoutes = require('./routes/chatRoutes');
+const authRoutes = require('../routes/authRoutes');
+const imageRoutes = require('../routes/imageRoutes');
+const chatRoutes = require('../routes/chatRoutes');
 
 // Middlewares
 app.use(bodyParser.json());
