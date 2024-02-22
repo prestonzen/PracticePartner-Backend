@@ -6,7 +6,7 @@ module.exports = {
   entry: './src/app.js', // Update with your actual entry file
   output: {
     filename: 'bundle.js',
-    path: path.resolve(__dirname, 'dist'), // Update with your desired output directory
+    path: path.resolve(__dirname, 'public'), // Update with your desired output directory
   },
   resolve: {
     fallback: {
