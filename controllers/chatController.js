@@ -31,7 +31,7 @@ exports.startChat = async (req, res, next) => {
     // Call OpenAI API to generate chat completion
     const completion = await openai.chat.completions.create({
       messages,
-      model: 'gpt-4-turbo-preview',
+      model: 'gpt-3.5-turbo-0125',
       response_format: { type: 'json_object' },
     });
 
