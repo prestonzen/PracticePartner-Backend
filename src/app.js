@@ -17,7 +17,7 @@ app.use(bodyParser.json());
 
 
 const corsOptions = {
-  origin: ['http://localhost:3002', 'https://practicepartner.kaizenapps.com'], // Allow requests from this origin
+  origin: ['http://localhost:3001', 'https://practicepartner.kaizenapps.com'], // Allow requests from this origin
   methods: 'GET,POST', // Allow only GET and POST requests
   allowedHeaders: 'Content-Type,Authorization', // Allow only these headers
 };
@@ -30,7 +30,7 @@ app.use('/api', imageRoutes);
 app.use('/api', chatRoutes);
 
 // PORT
-const port = 3001;
+const port = 3000;
 
 // Starting a server
 app.listen(port, () => {
