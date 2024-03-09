@@ -6,8 +6,10 @@
   "scripts": {
     "start": "node server.js",
     "test": "jest",
-    "build": "webpack --config webpack.config.js",
+    "build": "webpack",
+    "prod": "node dist/final.js",
     "dev": "cross-env NODE_ENV=development nodemon app"
+   
   },
   "author": "",
   "license": "ISC",
