@@ -5,9 +5,11 @@ const path = require('path');
 module.exports = {
   entry: './src/app.js', // Update with your actual entry file
   output: {
-    filename: 'bundle.js',
-    path: path.resolve(__dirname, 'public'), // Update with your desired output directory
+    path: path.join(__dirname, 'dist'),
+    publicPath: '/',
+    filename: 'final.js',
   },
+  target: 'node',
   resolve: {
     fallback: {
         "http": require.resolve("stream-http"),
@@ -16,6 +18,7 @@ module.exports = {
         "net": false,
         "tls": false,
         "crypto": false,
+        async_hooks: false,
         "zlib": false,
         "querystring": require.resolve("querystring-es3"),
         "fs": false,
