@@ -17,7 +17,7 @@ app.use(bodyParser.json());
 
 
 const corsOptions = {
-  origin: ['http://localhost:3001', 'https://practicepartner.kaizenapps.com'], // Allow requests from this origin
+  origin: ['http://localhost:3001', 'https://practicepartner.kaizenapps.com', 'https://practicepartner.ai'], // Allow requests from this origin
   methods: 'GET,POST', // Allow only GET and POST requests
   allowedHeaders: 'Content-Type,Authorization', // Allow only these headers
 };
