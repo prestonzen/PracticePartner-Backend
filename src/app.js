@@ -5,8 +5,7 @@ const cors = require('cors');
 // const firebaseConfig = require('../config/firebase');
 const Firestore = require('@google-cloud/firestore');
 const errorMiddleware = require('../middlewares/errorMiddleware');
-const stripe = require("stripe")('sk_test_51OwpTS01Mx8CmgRTDrqwtjvL6AM18K1Pp2MYILW2d7P9Ebf3mMl9AdCFiDwoTEAx5NEqGJZhdHCtg9ayWTS8hN3l00tSitWqde');
-
+const stripe = require("stripe")('/*stripe_key*/');
 const app = express();
 
 const db = new Firestore({
@@ -16,8 +15,8 @@ const db = new Firestore({
 
 
 //dummy data add & read from firestore
-// app.get('/', async (req, res) => {
-//   try {
+app.get('/', async (req, res) => {
+  try {
 
 //     const docRef = db.collection('users').doc('alovelace');
 
@@ -27,20 +26,21 @@ const db = new Firestore({
 //   born: 1815
 // });
 
-//     const snapshot = await db.collection('users').get();
-//     const users = [];
-//     snapshot.forEach((doc) => {
-//       users.push({
-//         id: doc.id,
-//         data: doc.data()
-//       });
-//     });
-//     res.json(users); // Send the data as JSON response
-//   } catch (error) {
-//     console.error('Error fetching users:', error);
-//     res.status(500).json({ error: 'Internal server error' }); // Send an error response
-//   }
-// });
+// const snapshot = await db.collection('subscriptions').get();
+    const snapshot = await db.collection('users').get();
+    const users = [];
+    snapshot.forEach((doc) => {
+      users.push({
+        id: doc.id,
+        data: doc.data()
+      });
+    });
+    res.json(users); // Send the data as JSON response
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    res.status(500).json({ error: 'Internal server error' }); // Send an error response
+  }
+});
 
 // Routes
 const authRoutes = require('../routes/authRoutes');
@@ -162,13 +162,20 @@ app.post("/create-stripe-session-subscription", async (req, res) => {
 
 // webhook for subscription
 app.post("/webhook", async (req, res) => {
-  const subscriptionsRef = db.collection('subscriptions');
+  const subscriptionsRef = await db.collection('subscriptions').get();
+
   const payload = req.body;
+  const payloadString = JSON.stringify(payload, null, 2);
   const sig = req.headers["stripe-signature"];
   let event;
+  const secret= "/*webhook_key*/";
+  const header = stripe.webhooks.generateTestHeaderString({
+    payload: payloadString,
+    secret,
+  });
 
   try {
-    event = stripe.webhooks.constructEvent(payload, sig, endpointSecret);
+    event = stripe.webhooks.constructEvent(payloadString, header,secret );
   } catch (err) {
     console.error(`Webhook Error: ${err.message}`);
     return res.status(400).send(`Webhook Error: ${err.message}`);
@@ -194,7 +201,8 @@ app.post("/webhook", async (req, res) => {
       };
 
       try {
-        await subscriptionsRef.add(subscriptionDocument);
+        const docRef = db.collection('subscriptions').doc('alovelace');
+        await docRef.set(subscriptionDocument);
         console.log(`A document was added to Firestore`);
       } catch (error) {
         console.error('Error adding document: ', error);
@@ -214,16 +222,28 @@ app.post("/webhook", async (req, res) => {
         endDate: new Date(subscription.current_period_end * 1000),
         recurringSuccessful_test: true,
       };
+      const updateRef = await db.collection('subscriptions');
+      const querySnapshot = await updateRef.where('userId', '==', customer?.metadata?.userId).get();
+      querySnapshot.forEach(async (doc) => {
+        try {
+            await doc.ref.update(updateDoc);
+            console.log(`Document updated: ${doc.id}`);
+        } catch (error) {
+            console.error(`Error updating document ${doc.id}: ${error}`);
+        }
+    });
 
-      try {
-        await subscriptionsRef
-          .where('userId', '==', customer?.metadata?.userId)
-          .update(updateDoc);
-        console.log(`Successfully updated the document in Firestore`);
-      } catch (error) {
-        console.error('Error updating document: ', error);
-        return res.status(500).send('Error updating document in Firestore');
-      }
+
+      // try {
+
+      //   await subscriptionsRef
+      //     .where('userId', '==', customer?.metadata?.userId)
+      //     .update(updateDoc);
+      //   console.log(`Successfully updated the document in Firestore`);
+      // } catch (error) {
+      //   console.error('Error updating document: ', error);
+      //   return res.status(500).send('Error updating document in Firestore');
+      // }
 
       console.log(
         `Recurring subscription payment successful for Invoice ID: ${invoice.id}`
