@@ -58,8 +58,7 @@ app.use((req, res, next) => {
 });
 
 const corsOptions = {
-  // https://practicepartner.ai/chat
-  origin: ['http://localhost:3001', 'https://practicepartner.kaizenapps.com', 'https://practicepartner.ai'], // Allow requests from this origin
+  origin: ['http://localhost:3001', 'https://practicepartner.kaizenapps.com', 'https://practicepartner.ai', 'https://married-dolls-cashiers-puts.trycloudflare.com'], // Allow requests from this origin
   methods: 'GET,POST', // Allow only GET and POST requests
   allowedHeaders: 'Content-Type,Authorization', // Allow only these headers
 };
