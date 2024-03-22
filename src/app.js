@@ -5,7 +5,7 @@ const cors = require('cors');
 // const firebaseConfig = require('../config/firebase');
 const Firestore = require('@google-cloud/firestore');
 const errorMiddleware = require('../middlewares/errorMiddleware');
-const stripe = require("stripe")('/*stripe_key*/');
+const stripe = require("stripe")('sk_test_51OwpTS01Mx8CmgRTDrqwtjvL6AM18K1Pp2MYILW2d7P9Ebf3mMl9AdCFiDwoTEAx5NEqGJZhdHCtg9ayWTS8hN3l00tSitWqde');
 const app = express();
 
 const db = new Firestore({
@@ -75,6 +75,7 @@ const port = 3000;
 
 app.post("/create-stripe-session-subscription", async (req, res) => {
   const userEmail = req.body.mail; // Replace with actual user email
+  // console.log(userEmail);
   let customer;
   const auth0UserId = userEmail;
 
@@ -168,7 +169,7 @@ app.post("/webhook", async (req, res) => {
   const payloadString = JSON.stringify(payload, null, 2);
   const sig = req.headers["stripe-signature"];
   let event;
-  const secret= "/*webhook_key*/";
+  const secret= "whsec_5be2d538e7f87b06c7cf4a89bda684903e06b0a5039ce3955da0da97abe8b124";
   const header = stripe.webhooks.generateTestHeaderString({
     payload: payloadString,
     secret,
@@ -201,7 +202,10 @@ app.post("/webhook", async (req, res) => {
       };
 
       try {
-        const docRef = db.collection('subscriptions').doc('alovelace');
+        const userEmail = event.data.object.customer_email;
+        // console.log(userEmail); 
+        const docRef = db.collection('subscriptions').doc(userEmail);
+        // 4242 4242 4242 4242
         await docRef.set(subscriptionDocument);
         console.log(`A document was added to Firestore`);
       } catch (error) {
@@ -275,12 +279,7 @@ app.post("/webhook", async (req, res) => {
 //   console.log("Server is running on port 3001");
 // });
 
-process.on("SIGINT", () => {
-  client.close().then(() => {
-    console.log("MongoDB disconnected on app termination");
-    process.exit(0);
-  });
-});
+
 
 // Starting a server
 app.listen(port, () => {
