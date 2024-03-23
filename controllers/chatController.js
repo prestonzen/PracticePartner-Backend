@@ -91,39 +91,7 @@ exports.startChat = async (req, res, next) => {
 
     // Send the response back to the client
     res.json({ message: rslt });
-  } catch (error) {
-    next(error);
-  }
-};
-
-
-
-// Function to get chat data for a specific user
-exports.getChat = async (req, res, next) => {
-  try {
-    // Extract user ID from request parameters
-    // const userId = req.params.userId; 
-    const userId = "syb@gmail.com";
-
-    // Retrieve chat data for the user from Firestore
-    const chatDoc = await db.collection("subscriptions").doc(userId).get();
-
-    // Check if the user document exists
-    if (!chatDoc.exists) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    // Extract chat data from the user document
-    const chatData = chatDoc.data();
-
-    // Check if chat data exists in the user document
-    if (!chatData.chats || chatData.chats.length === 0) {
-      return res.status(404).json({ message: "Chat data not found for the user" });
-    }
-
-    // Extract and return chat data from the user document
-    const chats = chatData.chats;
-    return res.json({ chats });
+    console.log('Session data:', req.session.user);
   } catch (error) {
     next(error);
   }
