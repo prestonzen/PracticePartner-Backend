@@ -2,37 +2,40 @@ const express = require('express');
 const axios = require('axios');
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const sessionMiddleware = require('../middlewares/sessionMiddleware');
 // const firebaseConfig = require('../config/firebase');
 const Firestore = require('@google-cloud/firestore');
 const errorMiddleware = require('../middlewares/errorMiddleware');
-const stripe = require("stripe")('sk_test_51OwpTS01Mx8CmgRTDrqwtjvL6AM18K1Pp2MYILW2d7P9Ebf3mMl9AdCFiDwoTEAx5NEqGJZhdHCtg9ayWTS8hN3l00tSitWqde');
+const stripe = require('stripe')(
+  'sk_test_51OwpTS01Mx8CmgRTDrqwtjvL6AM18K1Pp2MYILW2d7P9Ebf3mMl9AdCFiDwoTEAx5NEqGJZhdHCtg9ayWTS8hN3l00tSitWqde'
+);
 const app = express();
-
+app.use(sessionMiddleware);
+app.use(express.json());
 const db = new Firestore({
   projectId: 'practice-partner-ab0ef',
-  keyFilename: './practice-partner-ab0ef-firebase-adminsdk-9ic5b-9a4bf13548.json',
+  keyFilename:
+    './practice-partner-ab0ef-firebase-adminsdk-9ic5b-9a4bf13548.json',
 });
-
 
 //dummy data add & read from firestore
 app.get('/', async (req, res) => {
   try {
+    //     const docRef = db.collection('users').doc('alovelace');
 
-//     const docRef = db.collection('users').doc('alovelace');
+    // await docRef.set({
+    //   first: 'Ada',
+    //   last: 'Lovelace',
+    //   born: 1815
+    // });
 
-// await docRef.set({
-//   first: 'Ada',
-//   last: 'Lovelace',
-//   born: 1815
-// });
-
-// const snapshot = await db.collection('subscriptions').get();
+    // const snapshot = await db.collection('subscriptions').get();
     const snapshot = await db.collection('users').get();
     const users = [];
     snapshot.forEach((doc) => {
       users.push({
         id: doc.id,
-        data: doc.data()
+        data: doc.data(),
       });
     });
     res.json(users); // Send the data as JSON response
@@ -58,7 +61,12 @@ app.use((req, res, next) => {
 });
 
 const corsOptions = {
-  origin: ['http://localhost:3001', 'https://practicepartner.kaizenapps.com', 'https://practicepartner.ai', 'https://married-dolls-cashiers-puts.trycloudflare.com'], // Allow requests from this origin
+  origin: [
+    'http://localhost:3001',
+    'https://practicepartner.kaizenapps.com',
+    'https://practicepartner.ai',
+    'https://married-dolls-cashiers-puts.trycloudflare.com',
+  ], // Allow requests from this origin
   methods: 'GET,POST', // Allow only GET and POST requests
   allowedHeaders: 'Content-Type,Authorization', // Allow only these headers
 };
@@ -73,7 +81,7 @@ app.use('/api', chatRoutes);
 // PORT
 const port = 3000;
 
-app.post("/create-stripe-session-subscription", async (req, res) => {
+app.post('/create-stripe-session-subscription', async (req, res) => {
   const userEmail = req.body.mail; // Replace with actual user email
   // console.log(userEmail);
   let customer;
@@ -94,7 +102,7 @@ app.post("/create-stripe-session-subscription", async (req, res) => {
     // Check if the customer already has an active subscription
     const subscriptions = await stripe.subscriptions.list({
       customer: customer.id,
-      status: "active",
+      status: 'active',
       limit: 1,
     });
 
@@ -103,7 +111,7 @@ app.post("/create-stripe-session-subscription", async (req, res) => {
 
       const stripeSession = await stripe.billingPortal.sessions.create({
         customer: customer.id,
-        return_url: "http://localhost:3001/",
+        return_url: 'http://localhost:3001/',
       });
       return res.status(409).json({ redirectUrl: stripeSession.url });
     }
@@ -124,11 +132,11 @@ app.post("/create-stripe-session-subscription", async (req, res) => {
   });
   // Now create the Stripe checkout session with the customer ID
   const session = await stripe.checkout.sessions.create({
-    success_url: "http://localhost:3001/",
-    cancel_url: "http://localhost:3001/plan",
+    success_url: 'http://localhost:3001/',
+    cancel_url: 'http://localhost:3001/plan',
     // payment_method_types: ["card"],
-    mode: "subscription",
-    billing_address_collection: "auto",
+    mode: 'subscription',
+    billing_address_collection: 'auto',
     line_items: [
       {
         // price_data: {
@@ -142,7 +150,7 @@ app.post("/create-stripe-session-subscription", async (req, res) => {
         //     interval: "month",
         //   },
         // },
-        price:prices.data[0].id,
+        price: prices.data[0].id,
         quantity: 1,
       },
     ],
@@ -162,27 +170,28 @@ app.post("/create-stripe-session-subscription", async (req, res) => {
 // =====================================================================================
 
 // webhook for subscription
-app.post("/webhook", async (req, res) => {
+app.post('/webhook', async (req, res) => {
   const subscriptionsRef = await db.collection('subscriptions').get();
 
   const payload = req.body;
   const payloadString = JSON.stringify(payload, null, 2);
-  const sig = req.headers["stripe-signature"];
+  const sig = req.headers['stripe-signature'];
   let event;
-  const secret= "whsec_5be2d538e7f87b06c7cf4a89bda684903e06b0a5039ce3955da0da97abe8b124";
+  const secret =
+    'whsec_5be2d538e7f87b06c7cf4a89bda684903e06b0a5039ce3955da0da97abe8b124';
   const header = stripe.webhooks.generateTestHeaderString({
     payload: payloadString,
     secret,
   });
 
   try {
-    event = stripe.webhooks.constructEvent(payloadString, header,secret );
+    event = stripe.webhooks.constructEvent(payloadString, header, secret);
   } catch (err) {
     console.error(`Webhook Error: ${err.message}`);
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
-  if (event.type === "invoice.payment_succeeded") {
+  if (event.type === 'invoice.payment_succeeded') {
     const invoice = event.data.object;
 
     // On payment successful, get subscription and customer details
@@ -193,7 +202,7 @@ app.post("/webhook", async (req, res) => {
       event.data.object.customer
     );
 
-    if (invoice.billing_reason === "subscription_create") {
+    if (invoice.billing_reason === 'subscription_create') {
       // Handle the first successful payment
       const subscriptionDocument = {
         userId: customer?.metadata?.userId,
@@ -203,7 +212,7 @@ app.post("/webhook", async (req, res) => {
 
       try {
         const userEmail = event.data.object.customer_email;
-        // console.log(userEmail); 
+        // console.log(userEmail);
         const docRef = db.collection('subscriptions').doc(userEmail);
         // 4242 4242 4242 4242
         await docRef.set(subscriptionDocument);
@@ -217,8 +226,8 @@ app.post("/webhook", async (req, res) => {
         `First subscription payment successful for Invoice ID: ${customer.email} ${customer?.metadata?.userId}`
       );
     } else if (
-      invoice.billing_reason === "subscription_cycle" ||
-      invoice.billing_reason === "subscription_update"
+      invoice.billing_reason === 'subscription_cycle' ||
+      invoice.billing_reason === 'subscription_update'
     ) {
       // Handle recurring subscription payments
       const filter = { userId: customer?.metadata?.userId };
@@ -227,16 +236,17 @@ app.post("/webhook", async (req, res) => {
         recurringSuccessful_test: true,
       };
       const updateRef = await db.collection('subscriptions');
-      const querySnapshot = await updateRef.where('userId', '==', customer?.metadata?.userId).get();
+      const querySnapshot = await updateRef
+        .where('userId', '==', customer?.metadata?.userId)
+        .get();
       querySnapshot.forEach(async (doc) => {
         try {
-            await doc.ref.update(updateDoc);
-            console.log(`Document updated: ${doc.id}`);
+          await doc.ref.update(updateDoc);
+          console.log(`Document updated: ${doc.id}`);
         } catch (error) {
-            console.error(`Error updating document ${doc.id}: ${error}`);
+          console.error(`Error updating document ${doc.id}: ${error}`);
         }
-    });
-
+      });
 
       // try {
 
@@ -261,7 +271,7 @@ app.post("/webhook", async (req, res) => {
     );
   }
 
-  if (event.type === "customer.subscription.updated") {
+  if (event.type === 'customer.subscription.updated') {
     const subscription = event.data.object;
     if (subscription.cancel_at_period_end) {
       console.log(`Subscription ${subscription.id} was canceled.`);
@@ -278,8 +288,6 @@ app.post("/webhook", async (req, res) => {
 // app.listen(3001, () => {
 //   console.log("Server is running on port 3001");
 // });
-
-
 
 // Starting a server
 app.listen(port, () => {

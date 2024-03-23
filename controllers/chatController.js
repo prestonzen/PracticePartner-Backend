@@ -47,6 +47,7 @@ exports.startChat = async (req, res, next) => {
 
     // Send the response back to the client
     res.json({ message: responseContent });
+    console.log('Session data:', req.session.user);
   } catch (error) {
     next(error);
   }

@@ -1,5 +1,11 @@
 const axios = require('axios');
+const Firestore = require('@google-cloud/firestore');
 
+const db = new Firestore({
+  projectId: 'practice-partner-ab0ef',
+  keyFilename:
+    './practice-partner-ab0ef-firebase-adminsdk-9ic5b-9a4bf13548.json',
+});
 exports.signup = async (req, res) => {
   try {
     const { email, password, confirmPassword, name } = req.body;
@@ -32,6 +38,16 @@ exports.signup = async (req, res) => {
     const responseData = response.data;
     console.log('Firebase API response:', responseData);
 
+    const userData = {
+      name: req.body.name,
+      email: req.body.name,
+      password: req.body.password,
+      ...(req.body.additionalData || {}),
+    };
+
+    // Add user document to Firestore, associating it with the newly registered user
+    await db.collection('users').doc(req.body.email).set(userData);
+
     return res.status(201).json(responseData);
   } catch (error) {
     console.error('Error during user registration:', error);
@@ -41,7 +57,6 @@ exports.signup = async (req, res) => {
   // console.log('done');
 };
 
-// login
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -64,6 +79,39 @@ exports.login = async (req, res) => {
 
     const responseData = response.data;
     console.log('Firebase API response:', responseData);
+
+    // Fetch user data from Firestore based on the email
+    const userDoc = await db.collection('users').doc(req.body.email).get();
+    if (!userDoc.exists) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Ensure userData is correctly structured with required user data
+    const userData = {
+      email: responseData.email,
+      name: responseData.displayName,
+      // Add other user data as needed
+    };
+    console.log('User data:', userData);
+
+    // Store user data in session
+    req.session.user = userData;
+    console.log('Session data:', req.session.user);
+
+    return res.status(200).json({ message: 'Login successful' });
+  } catch (error) {
+    console.error('Error during user sign-in:', error);
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
+// @desc    Logout User from the
+// @route   GET /api/users/logout
+exports.logoutUser = async function logoutUser(req, res) {
+  try {
+    delete req.session.user;
+    res.clearCookie('token');
+    res.redirect('/login');
 
     return res.status(200).json(responseData);
   } catch (error) {
