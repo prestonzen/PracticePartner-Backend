@@ -16,7 +16,7 @@ const db = new Firestore({
 
 //dummy data add & read from firestore
 app.get('/', async (req, res) => {
-  try {
+  // try {
 
 //     const docRef = db.collection('users').doc('alovelace');
 
@@ -26,20 +26,79 @@ app.get('/', async (req, res) => {
 //   born: 1815
 // });
 
+
+
+//---------get all users from db-------------------
 // const snapshot = await db.collection('subscriptions').get();
-    const snapshot = await db.collection('users').get();
-    const users = [];
-    snapshot.forEach((doc) => {
-      users.push({
-        id: doc.id,
-        data: doc.data()
-      });
+//     // const snapshot = await db.collection('users').get();
+//     const users = [];
+//     snapshot.forEach((doc) => {
+//       users.push({
+//         id: doc.id,
+//         data: doc.data()
+//       });
+//     });
+//     res.json(users); // Send the data as JSON response
+//   } catch (error) {
+//     console.error('Error fetching users:', error);
+//     res.status(500).json({ error: 'Internal server error' }); // Send an error response
+//   }
+
+
+
+//----------------------get prompt from user collection---------------------------------
+const promptDoc = await db.collection('subscriptions').doc(userId).get();
+
+if (promptDoc.exists) {
+  const promptData = promptDoc.data();
+  const prompts = promptData.prompts;
+
+  if (prompts && prompts.length > 0) {
+    console.log('Prompts for user:', userId);
+    prompts.forEach((prompt, index) => {
+      console.log(`Prompt ${index + 1}:`);
+      console.log('Prompt Text:', prompt.prompt);
+      console.log('Image 1:', prompt.img1);
+      console.log('Image 2:', prompt.img2);
+      console.log('Image 3:', prompt.img3);
+      console.log('Image 4:', prompt.img4);
+      console.log('-------------------------');
     });
-    res.json(users); // Send the data as JSON response
-  } catch (error) {
-    console.error('Error fetching users:', error);
-    res.status(500).json({ error: 'Internal server error' }); // Send an error response
+  } else {
+    console.log('No prompts found for user:', userId);
   }
+} else {
+  console.log('subscriptions document not found for user:', userId);
+}
+
+//--------------post chat to db---------------------
+
+
+
+
+//-----------get chat from db-------------------
+
+const chatDoc = await db.collection('subscriptions').doc(userId).get();
+
+if (chatDoc.exists) {
+  const chatData = chatDoc.data();
+  const chts = chatData.chats;
+
+  if (chts && chts.length > 0) {
+    console.log('Chats for user:', userId);
+    chts.forEach((chat, index) => {
+      console.log(`Chats ${index + 1}:`);
+      console.log('Question Text:', chat.question);
+      console.log('Answer Text:', chat.answer);
+      console.log('-------------------------');
+    });
+  } else {
+    console.log('No chats found for user:', userId);
+  }
+} else {
+  console.log('subscriptions document not found for user:', userId);
+}
+
 });
 
 // Routes

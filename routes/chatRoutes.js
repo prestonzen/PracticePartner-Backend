@@ -4,5 +4,6 @@ const chatController = require('../controllers/chatController');
 
 // Endpoint for initiating a streamed chat
 router.post('/chat', chatController.startChat);
+router.get('/chat',chatController.getChat);
 
 module.exports = router;
