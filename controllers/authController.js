@@ -7,6 +7,10 @@ const db = new Firestore({
   keyFilename:
     './practice-partner-ab0ef-firebase-adminsdk-9ic5b-9a4bf13548.json',
 });
+
+const jwt = require('jsonwebtoken');
+
+
 exports.signup = async (req, res) => {
   try {
     const { email, password, confirmPassword, name } = req.body;
@@ -96,12 +100,23 @@ exports.login = async (req, res) => {
 
     // Store user data in session
     req.session.user = userData;
-    console.log('Session data:', req.sessionID);
+    // console.log('Session data:', req.sessionID);
     // const sessionData = store.sessions[req.sessionID];
     // console.log('Session data:', sessionData)
-    store.session = req.session;
-    console.log(store);
-    console.log(req.session.user.name);
+    store.session = await req.session;
+    // console.log(store);
+    // console.log(req.session.user.name);
+    const token = jwt.sign(userData, 'e04e8fab-c337-48bb-be63-d1c23b891be6', { expiresIn: '1h' });
+    console.log('JWT Token:', token);
+    const cookieDomain = 'localhost';
+
+    // Send JWT to client (e.g., set as HTTP-only cookie)
+    res.cookie('jwt', token, {
+      httpOnly: true,
+      maxAge: 60*60*1000,
+      domain: 'localhost',
+      secure: false
+    })
 
     return res.status(200).json({ message: 'Login successful' });
   } catch (error) {

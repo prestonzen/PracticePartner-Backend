@@ -1,4 +1,5 @@
 const OpenAI = require('openai');
+const jwt = require('jsonwebtoken');
 const Firestore = require('@google-cloud/firestore');
 const { store } = require('../middlewares/sessionMiddleware');
 const { MemoryStore } = require('express-session');
@@ -8,6 +9,8 @@ const db = new Firestore({
   keyFilename:
     './practice-partner-ab0ef-firebase-adminsdk-9ic5b-9a4bf13548.json',
 });
+
+
 
 // Provide your OpenAI API key here
 const apiKey = process.env.OPENAI_API_KEY;
@@ -20,6 +23,7 @@ exports.startChat = async (req, res, next) => {
   try {
     // Extract messages from the request body
     const { messages } = req.body;
+    const cookie = req.cookies['jwt'];
 
     // Ensure messages is an array and not empty
     if (!Array.isArray(messages) || messages.length === 0) {
@@ -36,6 +40,15 @@ exports.startChat = async (req, res, next) => {
         );
       }
     }
+
+    // Decode the JWT token to get the userId
+    // const token = await req.cookies['jwt'];
+    console.log(cookie);
+    const decodedCookie = jwt.verify(cookie, 'e04e8fab-c337-48bb-be63-d1c23b891be6');
+    // Replace 'your_secret_key' with your actual JWT secret key
+
+    // Extract the userId from the decoded token
+    const userId = decodedCookie.email;
 
     // Call OpenAI API to generate chat completion
     const completion = await openai.chat.completions.create({
@@ -76,38 +89,35 @@ exports.startChat = async (req, res, next) => {
     };
     iterateObject(parsedMessage);
 
-    const userId = 'syb@gmail.com';
     const newChat = {
       question: messages[1].content,
       answer: rslt,
     };
-    // console.log(rslt);
 
-    // Add the new prompt to the existing array of prompts
-    await db
-      .collection('subscriptions')
-      .doc(userId)
-      .update({
-        chats: Firestore.FieldValue.arrayUnion(newChat),
-      });
+    // Add the new chat to the user's chats array in the database
+    await db.collection('users').doc(userId).update({
+      chats: Firestore.FieldValue.arrayUnion(newChat),
+    });
 
     // Send the response back to the client
     res.json({ message: rslt });
-    // console.log('Session data:', req.user.name);
-    console.log(store.session);
   } catch (error) {
     next(error);
   }
 };
 
+
 exports.getChat = async (req, res, next) => {
   try {
     // Extract user ID from request parameters
     // const userId = req.params.userId;
-    const userId = 'syb@gmail.com';
+
+    const cookie = req.cookies['jwt'];
+    const decodedCookie = jwt.verify(cookie, 'e04e8fab-c337-48bb-be63-d1c23b891be6');
+    const userId = decodedCookie.email;
 
     // Retrieve chat data for the user from Firestore
-    const chatDoc = await db.collection('subscriptions').doc(userId).get();
+    const chatDoc = await db.collection('users').doc(userId).get();
 
     // Check if the user document exists
     if (!chatDoc.exists) {
