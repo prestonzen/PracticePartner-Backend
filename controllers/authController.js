@@ -10,7 +10,6 @@ const db = new Firestore({
 
 const jwt = require('jsonwebtoken');
 
-
 exports.signup = async (req, res) => {
   try {
     const { email, password, confirmPassword, name } = req.body;
@@ -106,17 +105,19 @@ exports.login = async (req, res) => {
     store.session = await req.session;
     // console.log(store);
     // console.log(req.session.user.name);
-    const token = jwt.sign(userData, 'e04e8fab-c337-48bb-be63-d1c23b891be6', { expiresIn: '1h' });
+    const token = jwt.sign(userData, 'e04e8fab-c337-48bb-be63-d1c23b891be6', {
+      expiresIn: '1h',
+    });
     console.log('JWT Token:', token);
     const cookieDomain = 'localhost';
 
     // Send JWT to client (e.g., set as HTTP-only cookie)
     res.cookie('jwt', token, {
       httpOnly: true,
-      maxAge: 60*60*1000,
+      maxAge: 60 * 60 * 1000,
       domain: 'localhost',
-      secure: false
-    })
+      secure: false,
+    });
 
     return res.status(200).json({ message: 'Login successful' });
   } catch (error) {
@@ -127,22 +128,18 @@ exports.login = async (req, res) => {
 
 // @desc    Logout User from the
 // @route   GET /api/users/logout
-exports.logoutUser = async function logoutUser(req, res) {
+exports.logout = async (req, res) => {
   try {
-    delete req.session.user;
-    res.clearCookie('token');
-    res.redirect('/login');
+    // Clear user data from the session
+    req.session.destroy();
 
-    return res.status(200).json(responseData);
+    // Clear the JWT cookie (if present)
+    res.clearCookie('jwt', { domain: 'localhost' }); // Assuming same domain for cookies
+    console.log('Logged out');
+    return res.status(200).json({ message: 'Logged out successfully' });
   } catch (error) {
-    console.error('Error during user sign-in:', error);
-
-    let errorMessage = 'Internal Server Error';
-    if (error.response && error.response.data && error.response.data.error) {
-      errorMessage = error.response.data.error.message;
-    }
-
-    return res.status(500).json({ error: errorMessage });
+    console.error('Error during user logout:', error);
+    return res.status(500).json({ error: 'Internal Server Error' });
   }
 };
 
