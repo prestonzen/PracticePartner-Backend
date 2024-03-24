@@ -2,6 +2,7 @@ const OpenAI = require("openai");
 require("dotenv").config();
 const { Configuration, OpenAIApi } = require("openai");
 const Firestore = require("@google-cloud/firestore");
+const jwt = require('jsonwebtoken');
 
 const db = new Firestore({
   projectId: "practice-partner-ab0ef",
@@ -43,7 +44,9 @@ exports.generateImage = async (req, res, next) => {
     // Make the request to the OpenAI API for each image
 
     // Send the array of generated images back to the client
-    const userId = "syb@gmail.com"; // Replace with the actual user ID
+    const cookie = req.cookies['jwt'];
+    const decodedCookie = jwt.verify(cookie, 'e04e8fab-c337-48bb-be63-d1c23b891be6');
+    const userId = decodedCookie.email;
 
     //---------------------post prompt to user collection-------------------------
     const newPrompt = {
@@ -56,7 +59,7 @@ exports.generateImage = async (req, res, next) => {
 
     // Add the new prompt to the existing array of prompts
     await db
-      .collection("subscriptions")
+      .collection("users")
       .doc(userId)
       .update({
         prompts: Firestore.FieldValue.arrayUnion(newPrompt),
@@ -71,10 +74,12 @@ exports.generateImage = async (req, res, next) => {
 
 exports.getImage = async (req, res, next) => {
   try {
-    const userId = "syb@gmail.com"; // Replace with the actual user ID
+    const cookie = req.cookies['jwt'];
+    const decodedCookie = jwt.verify(cookie, 'e04e8fab-c337-48bb-be63-d1c23b891be6');
+    const userId = decodedCookie.email; // Replace with the actual user ID
 
     // Fetch the user's data from the database
-    const imgDoc = await db.collection("subscriptions").doc(userId).get();
+    const imgDoc = await db.collection("users").doc(userId).get();
 
     // Check if the user exists in the database
     if (!imgDoc.exists) {
