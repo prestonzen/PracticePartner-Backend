@@ -109,6 +109,7 @@ if (chatDoc.exists) {
 const authRoutes = require('../routes/authRoutes');
 const imageRoutes = require('../routes/imageRoutes');
 const chatRoutes = require('../routes/chatRoutes');
+const userManagementRoutes = require('../routes/userManagementRoutes');
 
 // Middlewares
 app.use(bodyParser.json());
@@ -137,6 +138,7 @@ app.use(cors(corsOptions));
 app.use('/api', authRoutes);
 app.use('/api', imageRoutes);
 app.use('/api', chatRoutes);
+app.use('/api', userManagementRoutes);
 
 // PORT
 const port = 3000;
