@@ -1,5 +1,6 @@
 const session = require('express-session');
 const { v4: uuidv4 } = require('uuid');
+const store = new session.MemoryStore();
 
 // Configure express-session middleware
 const sessionMiddleware = session({
@@ -8,8 +9,9 @@ const sessionMiddleware = session({
   },
   secret: 'e04e8fab-c337-48bb-be63-d1c23b891be6', // Replace with your actual session secret
   resave: false,
-  saveUninitialized: true,
+  saveUninitialized: false,
+  store,
   cookie: { secure: false, path: '/' }, // Set secure to true if your app uses HTTPS
 });
 
-module.exports = sessionMiddleware;
+module.exports = { sessionMiddleware, store };

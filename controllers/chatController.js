@@ -1,10 +1,12 @@
-const OpenAI = require("openai");
-const Firestore = require("@google-cloud/firestore");
+const OpenAI = require('openai');
+const Firestore = require('@google-cloud/firestore');
+const { store } = require('../middlewares/sessionMiddleware');
+const { MemoryStore } = require('express-session');
 
 const db = new Firestore({
-  projectId: "practice-partner-ab0ef",
+  projectId: 'practice-partner-ab0ef',
   keyFilename:
-    "./practice-partner-ab0ef-firebase-adminsdk-9ic5b-9a4bf13548.json",
+    './practice-partner-ab0ef-firebase-adminsdk-9ic5b-9a4bf13548.json',
 });
 
 // Provide your OpenAI API key here
@@ -38,8 +40,8 @@ exports.startChat = async (req, res, next) => {
     // Call OpenAI API to generate chat completion
     const completion = await openai.chat.completions.create({
       messages,
-      model: "gpt-3.5-turbo-0125",
-      response_format: { type: "json_object" },
+      model: 'gpt-3.5-turbo-0125',
+      response_format: { type: 'json_object' },
     });
 
     // Check if completion.choices exists before accessing it
@@ -54,12 +56,12 @@ exports.startChat = async (req, res, next) => {
     const parsedMessage = JSON.parse(responseContent);
     // console.log(parsedMessage);
     //save to db
-    let rslt = "";
+    let rslt = '';
     // ans = responseContent.message;
     const iterateObject = (obj) => {
       Object.keys(obj).forEach((key) => {
         const value = obj[key];
-        rslt+=" ";
+        rslt += ' ';
         // console.log(`${key}:`);
         if (typeof value === 'object' && value !== null) {
           // If the value is an object, recursively iterate over it
@@ -74,16 +76,16 @@ exports.startChat = async (req, res, next) => {
     };
     iterateObject(parsedMessage);
 
-    const userId = "syb@gmail.com";
+    const userId = 'syb@gmail.com';
     const newChat = {
       question: messages[1].content,
-      answer: rslt
+      answer: rslt,
     };
     // console.log(rslt);
 
     // Add the new prompt to the existing array of prompts
     await db
-      .collection("subscriptions")
+      .collection('subscriptions')
       .doc(userId)
       .update({
         chats: Firestore.FieldValue.arrayUnion(newChat),
@@ -91,25 +93,25 @@ exports.startChat = async (req, res, next) => {
 
     // Send the response back to the client
     res.json({ message: rslt });
-    console.log('Session data:', req.session.user);
+    // console.log('Session data:', req.user.name);
+    console.log(store.session);
   } catch (error) {
     next(error);
   }
 };
 
-
 exports.getChat = async (req, res, next) => {
   try {
     // Extract user ID from request parameters
-    // const userId = req.params.userId; 
-    const userId = "syb@gmail.com";
+    // const userId = req.params.userId;
+    const userId = 'syb@gmail.com';
 
     // Retrieve chat data for the user from Firestore
-    const chatDoc = await db.collection("subscriptions").doc(userId).get();
+    const chatDoc = await db.collection('subscriptions').doc(userId).get();
 
     // Check if the user document exists
     if (!chatDoc.exists) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(404).json({ message: 'User not found' });
     }
 
     // Extract chat data from the user document
@@ -117,7 +119,9 @@ exports.getChat = async (req, res, next) => {
 
     // Check if chat data exists in the user document
     if (!chatData.chats || chatData.chats.length === 0) {
-      return res.status(404).json({ message: "Chat data not found for the user" });
+      return res
+        .status(404)
+        .json({ message: 'Chat data not found for the user' });
     }
 
     // Extract and return chat data from the user document

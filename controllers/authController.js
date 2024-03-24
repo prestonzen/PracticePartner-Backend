@@ -1,6 +1,7 @@
 const axios = require('axios');
 const Firestore = require('@google-cloud/firestore');
-
+const { store } = require('../middlewares/sessionMiddleware');
+const session = require('express-session');
 const db = new Firestore({
   projectId: 'practice-partner-ab0ef',
   keyFilename:
@@ -90,13 +91,17 @@ exports.login = async (req, res) => {
     const userData = {
       email: responseData.email,
       name: responseData.displayName,
-      // Add other user data as needed
     };
     console.log('User data:', userData);
 
     // Store user data in session
     req.session.user = userData;
-    console.log('Session data:', req.session.user);
+    console.log('Session data:', req.sessionID);
+    // const sessionData = store.sessions[req.sessionID];
+    // console.log('Session data:', sessionData)
+    store.session = req.session;
+    console.log(store);
+    console.log(req.session.user.name);
 
     return res.status(200).json({ message: 'Login successful' });
   } catch (error) {

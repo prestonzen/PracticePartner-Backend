@@ -2,15 +2,28 @@ const express = require('express');
 const axios = require('axios');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const sessionMiddleware = require('../middlewares/sessionMiddleware');
+const { sessionMiddleware } = require('../middlewares/sessionMiddleware');
 // const firebaseConfig = require('../config/firebase');
 const Firestore = require('@google-cloud/firestore');
 const errorMiddleware = require('../middlewares/errorMiddleware');
 const stripe = require('stripe')(
   'sk_test_51OwpTS01Mx8CmgRTDrqwtjvL6AM18K1Pp2MYILW2d7P9Ebf3mMl9AdCFiDwoTEAx5NEqGJZhdHCtg9ayWTS8hN3l00tSitWqde'
 );
+const session = require('express-session');
+const store = new session.MemoryStore();
 const app = express();
+// app.use(
+//   session({
+//     secret: 'e04e8fab-c337-48bb-be63-d1c23b891be6', // Replace with your actual session secret
+//     resave: false,
+//     saveUninitialized: false,
+//     store: store,
+//   })
+// );
 app.use(sessionMiddleware);
+// app.use((req, res, next) => {
+//   console.log(store);
+// });
 app.use(express.json());
 const db = new Firestore({
   projectId: 'practice-partner-ab0ef',
@@ -22,87 +35,79 @@ const db = new Firestore({
 app.get('/', async (req, res) => {
   // try {
 
-//     const docRef = db.collection('users').doc('alovelace');
+  //     const docRef = db.collection('users').doc('alovelace');
 
-    // await docRef.set({
-    //   first: 'Ada',
-    //   last: 'Lovelace',
-    //   born: 1815
-    // });
+  // await docRef.set({
+  //   first: 'Ada',
+  //   last: 'Lovelace',
+  //   born: 1815
+  // });
 
+  //---------get all users from db-------------------
+  // const snapshot = await db.collection('subscriptions').get();
+  //     // const snapshot = await db.collection('users').get();
+  //     const users = [];
+  //     snapshot.forEach((doc) => {
+  //       users.push({
+  //         id: doc.id,
+  //         data: doc.data()
+  //       });
+  //     });
+  //     res.json(users); // Send the data as JSON response
+  //   } catch (error) {
+  //     console.error('Error fetching users:', error);
+  //     res.status(500).json({ error: 'Internal server error' }); // Send an error response
+  //   }
 
+  //----------------------get prompt from user collection---------------------------------
+  const promptDoc = await db.collection('subscriptions').doc(userId).get();
 
-//---------get all users from db-------------------
-// const snapshot = await db.collection('subscriptions').get();
-//     // const snapshot = await db.collection('users').get();
-//     const users = [];
-//     snapshot.forEach((doc) => {
-//       users.push({
-//         id: doc.id,
-//         data: doc.data()
-//       });
-//     });
-//     res.json(users); // Send the data as JSON response
-//   } catch (error) {
-//     console.error('Error fetching users:', error);
-//     res.status(500).json({ error: 'Internal server error' }); // Send an error response
-//   }
+  if (promptDoc.exists) {
+    const promptData = promptDoc.data();
+    const prompts = promptData.prompts;
 
-
-
-//----------------------get prompt from user collection---------------------------------
-const promptDoc = await db.collection('subscriptions').doc(userId).get();
-
-if (promptDoc.exists) {
-  const promptData = promptDoc.data();
-  const prompts = promptData.prompts;
-
-  if (prompts && prompts.length > 0) {
-    console.log('Prompts for user:', userId);
-    prompts.forEach((prompt, index) => {
-      console.log(`Prompt ${index + 1}:`);
-      console.log('Prompt Text:', prompt.prompt);
-      console.log('Image 1:', prompt.img1);
-      console.log('Image 2:', prompt.img2);
-      console.log('Image 3:', prompt.img3);
-      console.log('Image 4:', prompt.img4);
-      console.log('-------------------------');
-    });
+    if (prompts && prompts.length > 0) {
+      console.log('Prompts for user:', userId);
+      prompts.forEach((prompt, index) => {
+        console.log(`Prompt ${index + 1}:`);
+        console.log('Prompt Text:', prompt.prompt);
+        console.log('Image 1:', prompt.img1);
+        console.log('Image 2:', prompt.img2);
+        console.log('Image 3:', prompt.img3);
+        console.log('Image 4:', prompt.img4);
+        console.log('-------------------------');
+      });
+    } else {
+      console.log('No prompts found for user:', userId);
+    }
   } else {
-    console.log('No prompts found for user:', userId);
+    console.log('subscriptions document not found for user:', userId);
   }
-} else {
-  console.log('subscriptions document not found for user:', userId);
-}
 
-//--------------post chat to db---------------------
+  //--------------post chat to db---------------------
 
+  //-----------get chat from db-------------------
 
+  const chatDoc = await db.collection('subscriptions').doc(userId).get();
 
+  if (chatDoc.exists) {
+    const chatData = chatDoc.data();
+    const chts = chatData.chats;
 
-//-----------get chat from db-------------------
-
-const chatDoc = await db.collection('subscriptions').doc(userId).get();
-
-if (chatDoc.exists) {
-  const chatData = chatDoc.data();
-  const chts = chatData.chats;
-
-  if (chts && chts.length > 0) {
-    console.log('Chats for user:', userId);
-    chts.forEach((chat, index) => {
-      console.log(`Chats ${index + 1}:`);
-      console.log('Question Text:', chat.question);
-      console.log('Answer Text:', chat.answer);
-      console.log('-------------------------');
-    });
+    if (chts && chts.length > 0) {
+      console.log('Chats for user:', userId);
+      chts.forEach((chat, index) => {
+        console.log(`Chats ${index + 1}:`);
+        console.log('Question Text:', chat.question);
+        console.log('Answer Text:', chat.answer);
+        console.log('-------------------------');
+      });
+    } else {
+      console.log('No chats found for user:', userId);
+    }
   } else {
-    console.log('No chats found for user:', userId);
+    console.log('subscriptions document not found for user:', userId);
   }
-} else {
-  console.log('subscriptions document not found for user:', userId);
-}
-
 });
 
 // Routes
