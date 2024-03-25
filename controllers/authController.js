@@ -106,7 +106,7 @@ exports.login = async (req, res) => {
     store.session = await req.session;
     // console.log(store);
     // console.log(req.session.user.name);
-    const token = jwt.sign(userData, 'e04e8fab-c337-48bb-be63-d1c23b891be6', { expiresIn: '1h' });
+    const token = jwt.sign(userData, process.env.JWT_KEY, { expiresIn: '1h' });
     console.log('JWT Token:', token);
     const cookieDomain = 'localhost';
 

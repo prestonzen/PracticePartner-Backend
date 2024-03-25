@@ -14,4 +14,22 @@ const sessionMiddleware = session({
   cookie: { secure: false, path: '/' }, // Set secure to true if your app uses HTTPS
 });
 
-module.exports = { sessionMiddleware, store };
+
+const authMiddleware = (req,res,next) => {
+  const token = req.cookies && req.cookies['jwt'];
+
+  if(token){
+    console.log(token);
+    next();
+  }
+  else{
+    // console.log(token);
+    res.redirect('http://localhost:3001/login');
+  }
+}
+
+module.exports = authMiddleware;
+
+// module.exports = { sessionMiddleware, store, authMiddleware };
+
+

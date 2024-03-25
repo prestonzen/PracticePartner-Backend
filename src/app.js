@@ -13,6 +13,13 @@ const session = require('express-session');
 const store = new session.MemoryStore();
 const app = express();
 const cookieParser = require('cookie-parser');
+// Routes
+const authRoutes = require('../routes/authRoutes');
+const imageRoutes = require('../routes/imageRoutes');
+const chatRoutes = require('../routes/chatRoutes');
+const userManagementRoutes = require('../routes/userManagementRoutes');
+const authMiddleware = require('../middlewares/sessionMiddleware');
+
 // app.use(
 //   session({
 //     secret: 'e04e8fab-c337-48bb-be63-d1c23b891be6', // Replace with your actual session secret
@@ -21,7 +28,7 @@ const cookieParser = require('cookie-parser');
 //     store: store,
 //   })
 // );
-app.use(sessionMiddleware);
+app.use(authMiddleware);
 app.use(cookieParser());
 // app.use((req, res, next) => {
 //   console.log(store);
@@ -33,90 +40,6 @@ const db = new Firestore({
     './practice-partner-ab0ef-firebase-adminsdk-9ic5b-9a4bf13548.json',
 });
 
-//dummy data add & read from firestore
-// app.get('/', async (req, res) => {
-//   // try {
-
-//   //     const docRef = db.collection('users').doc('alovelace');
-
-//   // await docRef.set({
-//   //   first: 'Ada',
-//   //   last: 'Lovelace',
-//   //   born: 1815
-//   // });
-
-//   //---------get all users from db-------------------
-//   // const snapshot = await db.collection('subscriptions').get();
-//   //     // const snapshot = await db.collection('users').get();
-//   //     const users = [];
-//   //     snapshot.forEach((doc) => {
-//   //       users.push({
-//   //         id: doc.id,
-//   //         data: doc.data()
-//   //       });
-//   //     });
-//   //     res.json(users); // Send the data as JSON response
-//   //   } catch (error) {
-//   //     console.error('Error fetching users:', error);
-//   //     res.status(500).json({ error: 'Internal server error' }); // Send an error response
-//   //   }
-
-//   //----------------------get prompt from user collection---------------------------------
-//   // const promptDoc = await db.collection('subscriptions').doc(userId).get();
-
-//   // if (promptDoc.exists) {
-//   //   const promptData = promptDoc.data();
-//   //   const prompts = promptData.prompts;
-
-//   //   if (prompts && prompts.length > 0) {
-//   //     console.log('Prompts for user:', userId);
-//   //     prompts.forEach((prompt, index) => {
-//   //       console.log(`Prompt ${index + 1}:`);
-//   //       console.log('Prompt Text:', prompt.prompt);
-//   //       console.log('Image 1:', prompt.img1);
-//   //       console.log('Image 2:', prompt.img2);
-//   //       console.log('Image 3:', prompt.img3);
-//   //       console.log('Image 4:', prompt.img4);
-//   //       console.log('-------------------------');
-//   //     });
-//   //   } else {
-//   //     console.log('No prompts found for user:', userId);
-//   //   }
-//   // } else {
-//   //   console.log('subscriptions document not found for user:', userId);
-//   // }
-
-//   //--------------post chat to db---------------------
-
-//   //-----------get chat from db-------------------
-
-//   const chatDoc = await db.collection('subscriptions').doc(userId).get();
-
-//   if (chatDoc.exists) {
-//     const chatData = chatDoc.data();
-//     const chts = chatData.chats;
-
-//     if (chts && chts.length > 0) {
-//       console.log('Chats for user:', userId);
-//       chts.forEach((chat, index) => {
-//         console.log(`Chats ${index + 1}:`);
-//         console.log('Question Text:', chat.question);
-//         console.log('Answer Text:', chat.answer);
-//         console.log('-------------------------');
-//       });
-//     } else {
-//       console.log('No chats found for user:', userId);
-//     }
-//   } else {
-//     console.log('subscriptions document not found for user:', userId);
-//   }
-// });
-
-// Routes
-const authRoutes = require('../routes/authRoutes');
-const imageRoutes = require('../routes/imageRoutes');
-const chatRoutes = require('../routes/chatRoutes');
-const userManagementRoutes = require('../routes/userManagementRoutes');
 
 // Middlewares
 app.use(bodyParser.json());
@@ -241,7 +164,7 @@ app.post('/create-stripe-session-subscription', async (req, res) => {
 
 // webhook for subscription
 app.post('/webhook', async (req, res) => {
-  const subscriptionsRef = await db.collection('subscriptions').get();
+
 
   const payload = req.body;
   const payloadString = JSON.stringify(payload, null, 2);
@@ -283,7 +206,7 @@ app.post('/webhook', async (req, res) => {
       try {
         const userEmail = event.data.object.customer_email;
         // console.log(userEmail);
-        const docRef = db.collection('subscriptions').doc(userEmail);
+        const docRef = db.collection('users').doc(userEmail);
         // 4242 4242 4242 4242
         await docRef.set(subscriptionDocument);
         console.log(`A document was added to Firestore`);
@@ -305,7 +228,7 @@ app.post('/webhook', async (req, res) => {
         endDate: new Date(subscription.current_period_end * 1000),
         recurringSuccessful_test: true,
       };
-      const updateRef = await db.collection('subscriptions');
+      const updateRef = await db.collection('users');
       const querySnapshot = await updateRef
         .where('userId', '==', customer?.metadata?.userId)
         .get();

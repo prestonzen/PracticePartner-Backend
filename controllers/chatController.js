@@ -14,6 +14,7 @@ const db = new Firestore({
 
 // Provide your OpenAI API key here
 const apiKey = process.env.OPENAI_API_KEY;
+const jwt_key = process.env.JWT_KEY;
 
 const openai = new OpenAI({
   apiKey: apiKey,
@@ -44,7 +45,7 @@ exports.startChat = async (req, res, next) => {
     // Decode the JWT token to get the userId
     // const token = await req.cookies['jwt'];
     console.log(cookie);
-    const decodedCookie = jwt.verify(cookie, 'e04e8fab-c337-48bb-be63-d1c23b891be6');
+    const decodedCookie = jwt.verify(cookie, jwt_key);
     // Replace 'your_secret_key' with your actual JWT secret key
 
     // Extract the userId from the decoded token
@@ -113,7 +114,7 @@ exports.getChat = async (req, res, next) => {
     // const userId = req.params.userId;
 
     const cookie = req.cookies['jwt'];
-    const decodedCookie = jwt.verify(cookie, 'e04e8fab-c337-48bb-be63-d1c23b891be6');
+    const decodedCookie = jwt.verify(cookie, jwt_key);
     const userId = decodedCookie.email;
 
     // Retrieve chat data for the user from Firestore
