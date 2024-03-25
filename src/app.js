@@ -77,8 +77,8 @@ app.use('/api', userManagementRoutes);
 const port = 3000;
 
 app.post('/create-stripe-session-subscription', async (req, res) => {
-  const userEmail = req.body.mail; // Replace with actual user email
-  // console.log(userEmail);
+  const userEmail = req.body.email; // Replace with actual user email
+  console.log(userEmail);
   let customer;
   const auth0UserId = userEmail;
 
@@ -152,8 +152,8 @@ app.post('/create-stripe-session-subscription', async (req, res) => {
     metadata: {
       userId: auth0UserId,
     },
-    // customer_email: "hello@tricksumo.com",
-    customer: customer.id, // Use the customer ID here
+    customer_email: userEmail,
+    // customer: customer.id, // Use the customer ID here
   });
 
   res.json({ id: session.id });
@@ -207,7 +207,7 @@ app.post('/webhook', async (req, res) => {
 
       try {
         const userEmail = event.data.object.customer_email;
-        // console.log(userEmail);
+        console.log(userEmail);
         const docRef = db.collection('users').doc(userEmail);
         // 4242 4242 4242 4242
         await docRef.set(subscriptionDocument);

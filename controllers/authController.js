@@ -43,7 +43,7 @@ exports.signup = async (req, res) => {
 
     const userData = {
       name: req.body.name,
-      email: req.body.name,
+      email: req.body.email,
       password: req.body.password,
       ...(req.body.additionalData || {}),
     };
@@ -88,13 +88,20 @@ exports.login = async (req, res) => {
     if (!userDoc.exists) {
       return res.status(404).json({ error: "User not found" });
     }
-
+    let isAdmin= false;
+    // console.log(response.data.email);
+    if(response.data.email === process.env.ADMIN_EMAIL){
+      
+      isAdmin=true;
+      console.log(isAdmin);
+    }
     // Ensure userData is correctly structured with required user data
     const userData = {
       email: responseData.email,
       name: responseData.displayName,
+      isAdmin: isAdmin
     };
-    console.log("User data:", userData);
+    // console.log("User data:", userData);
 
     const token = jwt.sign(userData, process.env.JWT_KEY, { expiresIn: "1h" });
     console.log("JWT Token:", token);
@@ -108,7 +115,7 @@ exports.login = async (req, res) => {
       secure: false,
     });
 
-    return res.status(200).json({ message: "Login successful" });
+    return res.status(200).json({ isAdmin:isAdmin});
   } catch (error) {
     console.error("Error during user sign-in:", error);
     return res.status(500).json({ error: "Internal Server Error" });
@@ -120,7 +127,7 @@ exports.login = async (req, res) => {
 exports.logout = async (req, res) => {
   try {
     // Clear user data from the session
-    req.session.destroy();
+    // req.session.destroy();
 
     // Clear the JWT cookie (if present)
     res.clearCookie("jwt", { domain: "localhost" }); // Assuming same domain for cookies
@@ -184,16 +191,18 @@ exports.authenticate = (req, res) => {
         } else {
           console.log(decodedToken);
           const userEmail = decodedToken.email;
+          const isAdmin = decodedToken.isAdmin;
 
           db.collection('users').doc(userEmail).get()
             .then((userDoc) => {
               if (!userDoc.exists) {
                 res.status(404).json({ error: 'User not found' });
               } else {
-                const subId = !!userDoc.data().subId; // Convert to boolean
+                const isSubscribed = !!userDoc.data().subId; // Convert to boolean
                 const data = {
                   email: userEmail,
-                  subId: subId,
+                  subId: isSubscribed,
+                  isAdmin: isAdmin
                 };
                 res.status(200).json(data);
               }
