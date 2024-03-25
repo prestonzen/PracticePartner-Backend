@@ -1,13 +1,13 @@
-const axios = require("axios");
-const Firestore = require("@google-cloud/firestore");
-const session = require("express-session");
+const axios = require('axios');
+const Firestore = require('@google-cloud/firestore');
+const session = require('express-session');
 const db = new Firestore({
-  projectId: "practice-partner-ab0ef",
+  projectId: 'practice-partner-ab0ef',
   keyFilename:
-    "./practice-partner-ab0ef-firebase-adminsdk-9ic5b-9a4bf13548.json",
+    './practice-partner-ab0ef-firebase-adminsdk-9ic5b-9a4bf13548.json',
 });
 
-const jwt = require("jsonwebtoken");
+const jwt = require('jsonwebtoken');
 
 exports.signup = async (req, res) => {
   try {
@@ -16,16 +16,16 @@ exports.signup = async (req, res) => {
     // Check if required fields are present
     if (!email || !password || !confirmPassword || !name) {
       return res.status(422).json({
-        error: "Unprocessable Entity",
-        message: "Name, email, password, and confirm password are required",
+        error: 'Unprocessable Entity',
+        message: 'Name, email, password, and confirm password are required',
       });
     }
 
     // Check if password and confirm password match
     if (password !== confirmPassword) {
       return res.status(422).json({
-        error: "Unprocessable Entity",
-        message: "Password and confirm password do not match",
+        error: 'Unprocessable Entity',
+        message: 'Password and confirm password do not match',
       });
     }
 
@@ -39,7 +39,7 @@ exports.signup = async (req, res) => {
     });
 
     const responseData = response.data;
-    console.log("Firebase API response:", responseData);
+    console.log('Firebase API response:', responseData);
 
     const userData = {
       name: req.body.name,
@@ -49,13 +49,13 @@ exports.signup = async (req, res) => {
     };
 
     // Add user document to Firestore, associating it with the newly registered user
-    await db.collection("users").doc(req.body.email).set(userData);
+    await db.collection('users').doc(req.body.email).set(userData);
 
     return res.status(201).json(responseData);
   } catch (error) {
-    console.error("Error during user registration:", error);
+    console.error('Error during user registration:', error);
 
-    return res.status(500).json({ error: "Internal Server Error" });
+    return res.status(500).json({ error: 'Internal Server Error' });
   }
   // console.log('done');
 };
@@ -67,8 +67,8 @@ exports.login = async (req, res) => {
     // Check if required fields are present
     if (!email || !password) {
       return res.status(422).json({
-        error: "Unprocessable Entity",
-        message: "Email and password are required",
+        error: 'Unprocessable Entity',
+        message: 'Email and password are required',
       });
     }
 
@@ -81,12 +81,12 @@ exports.login = async (req, res) => {
     });
 
     const responseData = response.data;
-    console.log("Firebase API response:", responseData);
+    console.log('Firebase API response:', responseData);
 
     // Fetch user data from Firestore based on the email
-    const userDoc = await db.collection("users").doc(req.body.email).get();
+    const userDoc = await db.collection('users').doc(req.body.email).get();
     if (!userDoc.exists) {
-      return res.status(404).json({ error: "User not found" });
+      return res.status(404).json({ error: 'User not found' });
     }
 
     // Ensure userData is correctly structured with required user data
@@ -94,24 +94,24 @@ exports.login = async (req, res) => {
       email: responseData.email,
       name: responseData.displayName,
     };
-    console.log("User data:", userData);
+    console.log('User data:', userData);
 
-    const token = jwt.sign(userData, process.env.JWT_KEY, { expiresIn: "1h" });
-    console.log("JWT Token:", token);
-    const cookieDomain = "localhost";
+    const token = jwt.sign(userData, process.env.JWT_KEY, { expiresIn: '1h' });
+    console.log('JWT Token:', token);
+    const cookieDomain = 'localhost';
 
     // Send JWT to client (e.g., set as HTTP-only cookie)
-    res.cookie("jwt", token, {
+    res.cookie('jwt', token, {
       httpOnly: true,
       maxAge: 60 * 60 * 1000,
-      domain: "localhost",
+      domain: 'localhost',
       secure: false,
     });
 
-    return res.status(200).json({ message: "Login successful" });
+    return res.status(200).json({ message: 'Login successful' });
   } catch (error) {
-    console.error("Error during user sign-in:", error);
-    return res.status(500).json({ error: "Internal Server Error" });
+    console.error('Error during user sign-in:', error);
+    return res.status(500).json({ error: 'Internal Server Error' });
   }
 };
 
@@ -120,15 +120,15 @@ exports.login = async (req, res) => {
 exports.logout = async (req, res) => {
   try {
     // Clear user data from the session
-    req.session.destroy();
+    // req.session.destroy();
 
     // Clear the JWT cookie (if present)
-    res.clearCookie("jwt", { domain: "localhost" }); // Assuming same domain for cookies
-    console.log("Logged out");
-    return res.status(200).json({ message: "Logged out successfully" });
+    res.clearCookie('jwt', { domain: 'localhost' }); // Assuming same domain for cookies
+    console.log('Logged out');
+    return res.status(200).json({ message: 'Logged out successfully' });
   } catch (error) {
-    console.error("Error during user logout:", error);
-    return res.status(500).json({ error: "Internal Server Error" });
+    console.error('Error during user logout:', error);
+    return res.status(500).json({ error: 'Internal Server Error' });
   }
 };
 
@@ -138,12 +138,12 @@ exports.verifyEmail = (req, res) => {
     .auth()
     .currentUser.sendEmailVerification()
     .then(function () {
-      return res.status(200).json({ status: "Email Verification Sent!" });
+      return res.status(200).json({ status: 'Email Verification Sent!' });
     })
     .catch(function (error) {
       let errorCode = error.code;
       let errorMessage = error.message;
-      if (errorCode === "auth/too-many-requests") {
+      if (errorCode === 'auth/too-many-requests') {
         return res.status(500).json({ error: errorMessage });
       }
     });
@@ -152,25 +152,24 @@ exports.verifyEmail = (req, res) => {
 // forget password
 exports.forgetPassword = (req, res) => {
   if (!req.body.email) {
-    return res.status(422).json({ email: "email is required" });
+    return res.status(422).json({ email: 'email is required' });
   }
   firebase
     .auth()
     .sendPasswordResetEmail(req.body.email)
     .then(function () {
-      return res.status(200).json({ status: "Password Reset Email Sent" });
+      return res.status(200).json({ status: 'Password Reset Email Sent' });
     })
     .catch(function (error) {
       let errorCode = error.code;
       let errorMessage = error.message;
-      if (errorCode == "auth/invalid-email") {
+      if (errorCode == 'auth/invalid-email') {
         return res.status(500).json({ error: errorMessage });
-      } else if (errorCode == "auth/user-not-found") {
+      } else if (errorCode == 'auth/user-not-found') {
         return res.status(500).json({ error: errorMessage });
       }
     });
 };
-
 
 exports.authenticate = (req, res) => {
   try {
@@ -185,7 +184,9 @@ exports.authenticate = (req, res) => {
           console.log(decodedToken);
           const userEmail = decodedToken.email;
 
-          db.collection('users').doc(userEmail).get()
+          db.collection('users')
+            .doc(userEmail)
+            .get()
             .then((userDoc) => {
               if (!userDoc.exists) {
                 res.status(404).json({ error: 'User not found' });
@@ -212,4 +213,3 @@ exports.authenticate = (req, res) => {
     return res.status(500).json({ error: 'Internal Server Error' });
   }
 };
-
