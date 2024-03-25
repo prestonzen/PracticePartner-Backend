@@ -28,7 +28,7 @@ const authMiddleware = require('../middlewares/sessionMiddleware');
 //     store: store,
 //   })
 // );
-app.use(authMiddleware);
+// app.use(authMiddleware);
 app.use(cookieParser());
 // app.use((req, res, next) => {
 //   console.log(store);
@@ -55,6 +55,7 @@ const corsOptions = {
   credentials:true,
   origin: [
     'http://localhost:3001',
+    'http://localhost:3000',
     'https://practicepartner.kaizenapps.com',
     'https://practicepartner.ai',
     'https://married-dolls-cashiers-puts.trycloudflare.com',
@@ -64,6 +65,7 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
+
 
 // Routes
 app.use('/api', authRoutes);

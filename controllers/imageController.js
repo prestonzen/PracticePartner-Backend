@@ -103,7 +103,7 @@ exports.getImage = async (req, res, next) => {
       img3: prompt.img3,
       img4: prompt.img4
     }));
-
+    
     // Send the array of images back to the client
     res.json(images);
   } catch (error) {

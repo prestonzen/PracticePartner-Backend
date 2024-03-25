@@ -1,6 +1,7 @@
 const session = require('express-session');
 const { v4: uuidv4 } = require('uuid');
 const store = new session.MemoryStore();
+const jwt = require('jsonwebtoken');
 
 // Configure express-session middleware
 const sessionMiddleware = session({
@@ -15,20 +16,28 @@ const sessionMiddleware = session({
 });
 
 
-const authMiddleware = (req,res,next) => {
+const requireAuth = (req, res, next) => {
   const token = req.cookies && req.cookies['jwt'];
 
-  if(token){
-    console.log(token);
-    next();
+  if (token) {
+    jwt.verify(token, process.env.JWT_KEY, (err, decodedToken) => {
+      if (err) {
+        // console.log(err.message);
+        res.status(401).json({ error: 'Unauthorized' });
+      } else {
+        console.log(decodedToken);
+        next();
+      }
+    });
+  } else {
+    res.status(401).json({ error: 'Unauthorized' });
   }
-  else{
-    // console.log(token);
-    res.redirect('http://localhost:3001/login');
-  }
-}
+};
 
-module.exports = authMiddleware;
+
+
+
+module.exports = requireAuth;
 
 // module.exports = { sessionMiddleware, store, authMiddleware };
 
