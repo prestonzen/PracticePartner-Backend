@@ -6,6 +6,9 @@ const db = new Firestore({
   keyFilename:
     './practice-partner-ab0ef-firebase-adminsdk-9ic5b-9a4bf13548.json',
 });
+const stripe = require('stripe')(
+  'sk_test_51OwpTS01Mx8CmgRTDrqwtjvL6AM18K1Pp2MYILW2d7P9Ebf3mMl9AdCFiDwoTEAx5NEqGJZhdHCtg9ayWTS8hN3l00tSitWqde'
+);
 
 const jwt = require('jsonwebtoken');
 
@@ -45,6 +48,8 @@ exports.signup = async (req, res) => {
       name: req.body.name,
       email: req.body.email,
       password: req.body.password,
+      isFree:true,
+      freePrompts: 10,
       ...(req.body.additionalData || {}),
     };
 
@@ -182,9 +187,9 @@ exports.forgetPassword = (req, res) => {
 exports.authenticate = (req, res) => {
   try {
     const token = req.cookies && req.cookies['jwt'];
-
+    let isSubscribed=false;
     if (token) {
-      jwt.verify(token, process.env.JWT_KEY, (err, decodedToken) => {
+      jwt.verify(token, process.env.JWT_KEY, async (err, decodedToken) => {
         if (err) {
           console.log(err.message);
           res.status(401).json({ error: 'Unauthorized' });
@@ -192,30 +197,51 @@ exports.authenticate = (req, res) => {
           console.log(decodedToken);
           const userEmail = decodedToken.email;
           const isAdmin = decodedToken.isAdmin;
+    
+          try {
+            const userDoc = await db.collection('users').doc(userEmail).get();
+            
+            if (!userDoc.exists) {
+              res.status(404).json({ error: 'User not found' });
+              return;
+            }
+    
+            const userData = userDoc.data();
+            
+            if(userData.freePrompts>0){
+              isSubscribed=true;
+            }else{
+            const stripeCustomerId = userData.stripeCustomerId;
 
-          db.collection('users')
-            .doc(userEmail)
-            .get()
-            .then((userDoc) => {
-              if (!userDoc.exists) {
-                res.status(404).json({ error: 'User not found' });
-              } else {
-                const isSubscribed = !!userDoc.data().subId; // Convert to boolean
-                const data = {
-                  email: userEmail,
-                  subId: isSubscribed,
-                  isAdmin: isAdmin
-                };
-                res.status(200).json(data);
-              }
-            })
-            .catch((error) => {
-              console.error('Error fetching user data:', error);
-              res.status(500).json({ error: 'Internal Server Error' });
+            if(stripeCustomerId){
+            const subscriptions = await stripe.subscriptions.list({
+              customer: stripeCustomerId,
+              status: 'active',
             });
+            // console.log(subscriptions);
+
+            if (subscriptions.data.length > 0  ){
+              // console.log("accessed");
+              isSubscribed = true;
+            }
+            // console.log(isSubscribed);
+          }
+        }
+            const data = {
+              email: userEmail,
+              isSubscribed: isSubscribed,
+              isAdmin: isAdmin
+            };
+    
+            res.status(200).json(data);
+          } catch (error) {
+            console.error('Error fetching user data:', error);
+            res.status(500).json({ error: 'Internal Server Error' });
+          }
         }
       });
-    } else {
+    }
+     else {
       res.status(401).json({ error: 'Unauthorized' });
     }
   } catch (error) {

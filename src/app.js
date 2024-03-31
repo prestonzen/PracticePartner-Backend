@@ -118,6 +118,13 @@ app.post('/create-stripe-session-subscription', async (req, res) => {
         userId: auth0UserId, // Replace with actual Auth0 user ID
       },
     });
+
+    console.log('Created Customer:', customer);
+
+    await db.collection('users').doc(userEmail).set({
+      stripeCustomerId: customer.id,
+      // Other user data if needed
+    }, { merge: true });
   }
 
   //   console.log(customer);
@@ -134,17 +141,6 @@ app.post('/create-stripe-session-subscription', async (req, res) => {
     billing_address_collection: 'auto',
     line_items: [
       {
-        // price_data: {
-        //   currency: "usd",
-        //   product_data: {
-        //     name: "Quarterly Subscription",
-        //     description: "Unlimited!",
-        //   },
-        //   unit_amount: 1,
-        //   recurring: {
-        //     interval: "month",
-        //   },
-        // },
         price: prices.data[0].id,
         quantity: 1,
       },
@@ -152,22 +148,16 @@ app.post('/create-stripe-session-subscription', async (req, res) => {
     metadata: {
       userId: auth0UserId,
     },
-    customer_email: userEmail,
-    // customer: customer.id, // Use the customer ID here
+    // customer_email: userEmail,
+    customer: customer.id, // Use the customer ID here
   });
 
   res.json({ id: session.id });
 });
 
-// Order fulfilment route
-// =====================================================================================
-// =====================================================================================
-// =====================================================================================
-
-// webhook for subscription
 app.post('/webhook', async (req, res) => {
 
-
+console.log("webhooooook");
   const payload = req.body;
   const payloadString = JSON.stringify(payload, null, 2);
   const sig = req.headers['stripe-signature'];
