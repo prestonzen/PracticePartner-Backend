@@ -83,23 +83,17 @@ exports.login = async (req, res) => {
     const responseData = response.data;
     console.log('Firebase API response:', responseData);
 
-    // Fetch user data from Firestore based on the email
-    const userDoc = await db.collection('users').doc(req.body.email).get();
-    if (!userDoc.exists) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-    let isAdmin= false;
+    let isAdmin = false;
     // console.log(response.data.email);
-    if(response.data.email === process.env.ADMIN_EMAIL){
-      
-      isAdmin=true;
+    if (response.data.email === process.env.ADMIN_EMAIL) {
+      isAdmin = true;
       console.log(isAdmin);
     }
     // Ensure userData is correctly structured with required user data
     const userData = {
       email: responseData.email,
       name: responseData.displayName,
-      isAdmin: isAdmin
+      isAdmin: isAdmin,
     };
     // console.log("User data:", userData);
 
@@ -115,8 +109,22 @@ exports.login = async (req, res) => {
       secure: false,
     });
 
-    return res.status(200).json({ isAdmin:isAdmin});
+    return res.status(200).json({ isAdmin: isAdmin });
   } catch (error) {
+    const userDoc = await db.collection('users').doc(req.body.email).get();
+
+    if (!userDoc.exists) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const userData = userDoc.data();
+
+    // Check if the provided password matches the one stored in the database
+    if (userData.password !== req.body.password) {
+      return res
+        .status(401)
+        .json({ error: 'Unauthorized', message: 'Incorrect password' });
+    }
     console.error('Error during user sign-in:', error);
     return res.status(500).json({ error: 'Internal Server Error' });
   }
@@ -204,7 +212,7 @@ exports.authenticate = (req, res) => {
                 const data = {
                   email: userEmail,
                   subId: isSubscribed,
-                  isAdmin: isAdmin
+                  isAdmin: isAdmin,
                 };
                 res.status(200).json(data);
               }
