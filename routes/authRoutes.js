@@ -6,7 +6,8 @@ const {
   login,
   logout,
   forgetPassword,
-  authenticate
+  authenticate,
+  checkAndStoreUser,
 } = require('../controllers/authController');
 
 router.post('/signup', signup);
@@ -14,9 +15,10 @@ router.post('/signup', signup);
 router.post('/login', login);
 
 router.post('/logout', logout);
+router.post('/checkAndStoreUser', checkAndStoreUser);
 
 router.post('/forget-password', forgetPassword);
 
-router.get('/authenticate',authenticate);
+router.get('/authenticate', authenticate);
 
 module.exports = router;

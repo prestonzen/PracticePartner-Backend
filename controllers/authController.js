@@ -256,3 +256,43 @@ exports.authenticate = (req, res) => {
     return res.status(500).json({ error: 'Internal Server Error' });
   }
 };
+
+exports.checkAndStoreUser = async (req, res) => {
+  try {
+    const userData = req.body;
+
+    const userDoc = await db.collection('users').doc(userData.email).get();
+
+    if (!userDoc.exists) {
+      await db.collection('users').doc(userData.email).set(userData);
+      // Continue with token generation and response
+    }
+
+    let isAdmin = false;
+    if (userData.email === process.env.ADMIN_EMAIL) {
+      isAdmin = true;
+    }
+
+    const userDataG = {
+      email: userData.email,
+      name: userData.name,
+      isAdmin: isAdmin,
+    };
+
+    const token = jwt.sign(userDataG, process.env.JWT_KEY, {
+      expiresIn: '1h',
+    });
+    console.log('JWT Token:', token);
+
+    res.cookie('jwt', token, {
+      httpOnly: true,
+      maxAge: 60 * 60 * 1000,
+      domain: 'localhost',
+      secure: false,
+    });
+
+    return res.status(200).json({ isAdmin: isAdmin });
+  } catch (error) {
+    res.status(500).send({ error: 'Internal server error' });
+  }
+};
