@@ -94,14 +94,28 @@ exports.startChat = async (req, res, next) => {
       question: messages[1].content,
       answer: rslt,
     };
+    const userDoc = await db.collection('users').doc(userId).get();
+    const currentFreePrompts = userDoc.data().freePrompts;
+
+    if (userDoc.data().isFree && currentFreePrompts <= 0) {
+      await db
+      .collection("users")
+      .doc(userId)
+      .update({
+        isFree: false,
+      });
+      res.status(401).json({ error: 'Insufficient free prompts' });
+    }else{
 
     // Add the new chat to the user's chats array in the database
     await db.collection('users').doc(userId).update({
       chats: Firestore.FieldValue.arrayUnion(newChat),
+      freePrompts: currentFreePrompts - 1,
     });
 
     // Send the response back to the client
     res.json({ message: rslt });
+  }
   } catch (error) {
     next(error);
   }
