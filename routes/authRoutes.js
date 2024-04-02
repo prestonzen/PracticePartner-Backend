@@ -8,6 +8,7 @@ const {
   forgetPassword,
   authenticate,
   checkAndStoreUser,
+  verifyEmail,
 } = require('../controllers/authController');
 
 router.post('/signup', signup);
@@ -16,6 +17,7 @@ router.post('/login', login);
 
 router.post('/logout', logout);
 router.post('/checkAndStoreUser', checkAndStoreUser);
+router.get('/verify', verifyEmail);
 
 router.post('/forget-password', forgetPassword);
 

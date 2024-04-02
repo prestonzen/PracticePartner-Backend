@@ -34,12 +34,12 @@ app.use(cookieParser());
 //   console.log(store);
 // });
 app.use(express.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 const db = new Firestore({
   projectId: 'practice-partner-ab0ef',
   keyFilename:
     './practice-partner-ab0ef-firebase-adminsdk-9ic5b-9a4bf13548.json',
 });
-
 
 // Middlewares
 app.use(bodyParser.json());
@@ -52,7 +52,7 @@ app.use((req, res, next) => {
 });
 
 const corsOptions = {
-  credentials:true,
+  credentials: true,
   origin: [
     'http://localhost:3001',
     'http://localhost:3000',
@@ -65,7 +65,6 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-
 
 // Routes
 app.use('/api', authRoutes);
@@ -121,10 +120,13 @@ app.post('/create-stripe-session-subscription', async (req, res) => {
 
     console.log('Created Customer:', customer);
 
-    await db.collection('users').doc(userEmail).set({
-      stripeCustomerId: customer.id,
-      // Other user data if needed
-    }, { merge: true });
+    await db.collection('users').doc(userEmail).set(
+      {
+        stripeCustomerId: customer.id,
+        // Other user data if needed
+      },
+      { merge: true }
+    );
   }
 
   //   console.log(customer);
@@ -156,8 +158,7 @@ app.post('/create-stripe-session-subscription', async (req, res) => {
 });
 
 app.post('/webhook', async (req, res) => {
-
-console.log("webhooooook");
+  console.log('webhooooook');
   const payload = req.body;
   const payloadString = JSON.stringify(payload, null, 2);
   const sig = req.headers['stripe-signature'];

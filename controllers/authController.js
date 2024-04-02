@@ -1,6 +1,7 @@
 const axios = require('axios');
 const Firestore = require('@google-cloud/firestore');
 const session = require('express-session');
+const nodemailer = require('nodemailer');
 const db = new Firestore({
   projectId: 'practice-partner-ab0ef',
   keyFilename:
@@ -11,6 +12,43 @@ const stripe = require('stripe')(
 );
 
 const jwt = require('jsonwebtoken');
+function sendVerificationEmail(email, name, password) {
+  // Implement logic to send a verification email to the provided email address
+  // Include a verification link in the email
+  // When the user clicks the verification link, mark the user's account as verified in your database
+
+  // Create a Nodemailer transporter using SMTP
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: 'mdsoyeb181811@gmail.com',
+      pass: 'yibl zkdj ceyf xwff',
+    },
+  });
+
+  // Email content
+  const mailOptions = {
+    from: 'your_email@gmail.com',
+    to: email,
+    subject: 'Practice Partner Email Verification',
+    html: `
+      <p>Click the following link to verify your email:</p>
+      <a href="http://localhost:3000/api/verify?email=${email}&name=${name}&password=${password}">Verify Email</a>
+
+    `,
+  };
+
+  // Send email
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.error('Error sending email:', error);
+    } else {
+      console.log('Email sent:', info.response);
+    }
+  });
+}
+
+// sendVerificationEmail('mdsoyeb@iut-dhaka.edu');
 
 exports.signup = async (req, res) => {
   try {
@@ -32,6 +70,33 @@ exports.signup = async (req, res) => {
       });
     }
 
+    // Send verification email
+    await sendVerificationEmail(email, name, password);
+
+    // const userData = {
+    //   name: req.body.name,
+    //   email: req.body.email,
+    //   password: req.body.password,
+    //   isFree: true,
+    //   freePrompts: 10,
+    //   ...(req.body.additionalData || {}),
+    //   emailVerified: false, // Adding email verification status
+    // };
+
+    // // Add user document to Firestore, associating it with the newly registered user
+    // await db.collection('users').doc(req.body.email).set(userData);
+
+    // return res.status(201).json(responseData);
+  } catch (error) {
+    console.error('Error during user registration:', error);
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
+exports.verifyEmail = async (req, res) => {
+  try {
+    // Extract parameters from the request's query string
+    const { email, name, password } = req.query;
     const firebaseApiUrl = `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=AIzaSyA9zvTNuDpOOkwfLgWuIIuWj_HJOF0jz4I`;
 
     const response = await axios.post(firebaseApiUrl, {
@@ -43,26 +108,21 @@ exports.signup = async (req, res) => {
 
     const responseData = response.data;
     console.log('Firebase API response:', responseData);
-
     const userData = {
-      name: req.body.name,
-      email: req.body.email,
-      password: req.body.password,
+      name,
+      email,
+      password,
       isFree: true,
       freePrompts: 10,
-      ...(req.body.additionalData || {}),
     };
-
     // Add user document to Firestore, associating it with the newly registered user
-    await db.collection('users').doc(req.body.email).set(userData);
-
-    return res.status(201).json(responseData);
+    await db.collection('users').doc(email).set(userData);
+    console.log('Done');
+    return res.status(200).json(responseData);
   } catch (error) {
-    console.error('Error during user registration:', error);
-
-    return res.status(500).json({ error: 'Internal Server Error' });
+    // console.error('Error during email verification:', error);
+    // return res.status(500).json({ error: 'Internal Server Error' });
   }
-  // console.log('done');
 };
 
 exports.login = async (req, res) => {
@@ -153,22 +213,22 @@ exports.logout = async (req, res) => {
   }
 };
 
-// verify email
-exports.verifyEmail = (req, res) => {
-  firebase
-    .auth()
-    .currentUser.sendEmailVerification()
-    .then(function () {
-      return res.status(200).json({ status: 'Email Verification Sent!' });
-    })
-    .catch(function (error) {
-      let errorCode = error.code;
-      let errorMessage = error.message;
-      if (errorCode === 'auth/too-many-requests') {
-        return res.status(500).json({ error: errorMessage });
-      }
-    });
-};
+// // verify email
+// exports.verifyEmail = (req, res) => {
+//   firebase
+//     .auth()
+//     .currentUser.sendEmailVerification()
+//     .then(function () {
+//       return res.status(200).json({ status: 'Email Verification Sent!' });
+//     })
+//     .catch(function (error) {
+//       let errorCode = error.code;
+//       let errorMessage = error.message;
+//       if (errorCode === 'auth/too-many-requests') {
+//         return res.status(500).json({ error: errorMessage });
+//       }
+//     });
+// };
 
 // forget password
 exports.forgetPassword = (req, res) => {
