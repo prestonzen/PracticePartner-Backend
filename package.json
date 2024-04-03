@@ -13,6 +13,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@firebase/auth": "^1.7.0",
     "@google-cloud/firestore": "^7.4.0",
     "assert": "^2.1.0",
     "axios": "^1.6.7",

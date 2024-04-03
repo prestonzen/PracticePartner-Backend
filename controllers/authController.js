@@ -12,41 +12,41 @@ const stripe = require('stripe')(
 );
 
 const jwt = require('jsonwebtoken');
-function sendVerificationEmail(email, name, password) {
-  // Implement logic to send a verification email to the provided email address
-  // Include a verification link in the email
-  // When the user clicks the verification link, mark the user's account as verified in your database
+// function sendVerificationEmail(email, name, password) {
+//   // Implement logic to send a verification email to the provided email address
+//   // Include a verification link in the email
+//   // When the user clicks the verification link, mark the user's account as verified in your database
 
-  // Create a Nodemailer transporter using SMTP
-  const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: 'mdsoyeb181811@gmail.com',
-      pass: 'yibl zkdj ceyf xwff',
-    },
-  });
+//   // Create a Nodemailer transporter using SMTP
+//   const transporter = nodemailer.createTransport({
+//     service: 'gmail',
+//     auth: {
+//       user: 'mdsoyeb181811@gmail.com',
+//       pass: 'yibl zkdj ceyf xwff',
+//     },
+//   });
 
-  // Email content
-  const mailOptions = {
-    from: 'your_email@gmail.com',
-    to: email,
-    subject: 'Practice Partner Email Verification',
-    html: `
-      <p>Click the following link to verify your email:</p>
-      <a href="http://localhost:3000/api/verify?email=${email}&name=${name}&password=${password}">Verify Email</a>
+//   // Email content
+//   const mailOptions = {
+//     from: 'your_email@gmail.com',
+//     to: email,
+//     subject: 'Practice Partner Email Verification',
+//     html: `
+//       <p>Click the following link to verify your email:</p>
+//       <a href="http://localhost:3000/api/verify?email=${email}&name=${name}&password=${password}">Verify Email</a>
 
-    `,
-  };
+//     `,
+//   };
 
-  // Send email
-  transporter.sendMail(mailOptions, (error, info) => {
-    if (error) {
-      console.error('Error sending email:', error);
-    } else {
-      console.log('Email sent:', info.response);
-    }
-  });
-}
+//   // Send email
+//   transporter.sendMail(mailOptions, (error, info) => {
+//     if (error) {
+//       console.error('Error sending email:', error);
+//     } else {
+//       console.log('Email sent:', info.response);
+//     }
+//   });
+// }
 
 // sendVerificationEmail('mdsoyeb@iut-dhaka.edu');
 
@@ -54,39 +54,39 @@ exports.signup = async (req, res) => {
   try {
     const { email, password, confirmPassword, name } = req.body;
 
-    // Check if required fields are present
-    if (!email || !password || !confirmPassword || !name) {
-      return res.status(422).json({
-        error: 'Unprocessable Entity',
-        message: 'Name, email, password, and confirm password are required',
-      });
-    }
+    // // Check if required fields are present
+    // if (!email || !password || !confirmPassword || !name) {
+    //   return res.status(422).json({
+    //     error: 'Unprocessable Entity',
+    //     message: 'Name, email, password, and confirm password are required',
+    //   });
+    // }
 
-    // Check if password and confirm password match
-    if (password !== confirmPassword) {
-      return res.status(422).json({
-        error: 'Unprocessable Entity',
-        message: 'Password and confirm password do not match',
-      });
-    }
+    // // Check if password and confirm password match
+    // if (password !== confirmPassword) {
+    //   return res.status(422).json({
+    //     error: 'Unprocessable Entity',
+    //     message: 'Password and confirm password do not match',
+    //   });
+    // }
 
-    // Send verification email
-    await sendVerificationEmail(email, name, password);
+    // // Send verification email
+    // await sendVerificationEmail(email, name, password);
 
-    // const userData = {
-    //   name: req.body.name,
-    //   email: req.body.email,
-    //   password: req.body.password,
-    //   isFree: true,
-    //   freePrompts: 10,
-    //   ...(req.body.additionalData || {}),
-    //   emailVerified: false, // Adding email verification status
-    // };
+    const userData = {
+      name: req.body.name,
+      email: req.body.email,
+      password: req.body.password,
+      isFree: true,
+      freePrompts: 10,
+      ...(req.body.additionalData || {}),
+      emailVerified: false, // Adding email verification status
+    };
 
-    // // Add user document to Firestore, associating it with the newly registered user
-    // await db.collection('users').doc(req.body.email).set(userData);
+    // Add user document to Firestore, associating it with the newly registered user
+    await db.collection('users').doc(req.body.email).set(userData);
 
-    // return res.status(201).json(responseData);
+    return res.status(201).json(userData);
   } catch (error) {
     console.error('Error during user registration:', error);
     return res.status(500).json({ error: 'Internal Server Error' });
@@ -135,6 +135,12 @@ exports.login = async (req, res) => {
         error: 'Unprocessable Entity',
         message: 'Email and password are required',
       });
+    }
+
+    const userDoc = await db.collection('users').doc(req.body.email).get();
+
+    if (!userDoc.exists) {
+      return res.status(404).json({ error: 'User not found' });
     }
 
     const firebaseApiUrl = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyA9zvTNuDpOOkwfLgWuIIuWj_HJOF0jz4I`;
