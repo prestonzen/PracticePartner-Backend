@@ -108,10 +108,16 @@ exports.startChat = async (req, res, next) => {
     }else{
 
     // Add the new chat to the user's chats array in the database
+    if(userDoc.data().isFree){
     await db.collection('users').doc(userId).update({
       chats: Firestore.FieldValue.arrayUnion(newChat),
       freePrompts: currentFreePrompts - 1,
     });
+  }else{
+    await db.collection('users').doc(userId).update({
+      chats: Firestore.FieldValue.arrayUnion(newChat)
+    });
+  }
 
     // Send the response back to the client
     res.json({ message: rslt });

@@ -71,6 +71,7 @@ exports.generateImage = async (req, res, next) => {
       res.status(401).json({ error: 'Insufficient free prompts' });
     } else{
     // Add the new prompt to the existing array of prompts
+    if(userDoc.data().isFree){
     await db
       .collection("users")
       .doc(userId)
@@ -78,6 +79,14 @@ exports.generateImage = async (req, res, next) => {
         prompts: Firestore.FieldValue.arrayUnion(newPrompt),
         freePrompts: currentFreePrompts - 1,
       });
+    }else{
+      await db
+      .collection("users")
+      .doc(userId)
+      .update({
+        prompts: Firestore.FieldValue.arrayUnion(newPrompt)
+      });
+    }
     res.json(images);
     }
   } catch (error) {

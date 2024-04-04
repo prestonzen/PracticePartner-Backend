@@ -12,66 +12,13 @@ const stripe = require('stripe')(
 );
 
 const jwt = require('jsonwebtoken');
-// function sendVerificationEmail(email, name, password) {
-//   // Implement logic to send a verification email to the provided email address
-//   // Include a verification link in the email
-//   // When the user clicks the verification link, mark the user's account as verified in your database
-
-//   // Create a Nodemailer transporter using SMTP
-//   const transporter = nodemailer.createTransport({
-//     service: 'gmail',
-//     auth: {
-//       user: 'mdsoyeb181811@gmail.com',
-//       pass: 'yibl zkdj ceyf xwff',
-//     },
-//   });
-
-//   // Email content
-//   const mailOptions = {
-//     from: 'your_email@gmail.com',
-//     to: email,
-//     subject: 'Practice Partner Email Verification',
-//     html: `
-//       <p>Click the following link to verify your email:</p>
-//       <a href="http://localhost:3000/api/verify?email=${email}&name=${name}&password=${password}">Verify Email</a>
-
-//     `,
-//   };
-
-//   // Send email
-//   transporter.sendMail(mailOptions, (error, info) => {
-//     if (error) {
-//       console.error('Error sending email:', error);
-//     } else {
-//       console.log('Email sent:', info.response);
-//     }
-//   });
-// }
-
-// sendVerificationEmail('mdsoyeb@iut-dhaka.edu');
+const cookieDomain = 'localhost';
 
 exports.signup = async (req, res) => {
   try {
     const { email, password, confirmPassword, name } = req.body;
 
-    // // Check if required fields are present
-    // if (!email || !password || !confirmPassword || !name) {
-    //   return res.status(422).json({
-    //     error: 'Unprocessable Entity',
-    //     message: 'Name, email, password, and confirm password are required',
-    //   });
-    // }
-
-    // // Check if password and confirm password match
-    // if (password !== confirmPassword) {
-    //   return res.status(422).json({
-    //     error: 'Unprocessable Entity',
-    //     message: 'Password and confirm password do not match',
-    //   });
-    // }
-
-    // // Send verification email
-    // await sendVerificationEmail(email, name, password);
+    
 
     const userData = {
       name: req.body.name,
@@ -170,17 +117,17 @@ exports.login = async (req, res) => {
 
     const token = jwt.sign(userData, process.env.JWT_KEY, { expiresIn: '1h' });
     console.log('JWT Token:', token);
-    const cookieDomain = 'localhost';
+    
 
     // Send JWT to client (e.g., set as HTTP-only cookie)
     res.cookie('jwt', token, {
       httpOnly: true,
       maxAge: 60 * 60 * 1000,
-      domain: 'localhost',
+      domain: cookieDomain,
       secure: false,
     });
 
-    return res.status(200).json({ isAdmin: isAdmin });
+    return res.status(200).json({ isAdmin: isAdmin, email: responseData.email });
   } catch (error) {
     const userDoc = await db.collection('users').doc(req.body.email).get();
 
@@ -201,16 +148,13 @@ exports.login = async (req, res) => {
   }
 };
 
-// @desc    Logout User from the
-// @route   GET /api/users/logout
+
 exports.logout = async (req, res) => {
   try {
-    // Clear user data from the session
-    // req.session.destroy();
-    // req.session.destroy();
+   
 
     // Clear the JWT cookie (if present)
-    res.clearCookie('jwt', { domain: 'localhost' }); // Assuming same domain for cookies
+    res.clearCookie('jwt', { domain: cookieDomain }); // Assuming same domain for cookies
     console.log('Logged out');
     return res.status(200).json({ message: 'Logged out successfully' });
   } catch (error) {
@@ -219,22 +163,7 @@ exports.logout = async (req, res) => {
   }
 };
 
-// // verify email
-// exports.verifyEmail = (req, res) => {
-//   firebase
-//     .auth()
-//     .currentUser.sendEmailVerification()
-//     .then(function () {
-//       return res.status(200).json({ status: 'Email Verification Sent!' });
-//     })
-//     .catch(function (error) {
-//       let errorCode = error.code;
-//       let errorMessage = error.message;
-//       if (errorCode === 'auth/too-many-requests') {
-//         return res.status(500).json({ error: errorMessage });
-//       }
-//     });
-// };
+
 
 // forget password
 exports.forgetPassword = (req, res) => {
@@ -343,6 +272,8 @@ exports.checkAndStoreUser = async (req, res) => {
       email: userData.email,
       name: userData.name,
       isAdmin: isAdmin,
+      isFree: true,
+      freePrompts: 10,
     };
 
     const token = jwt.sign(userDataG, process.env.JWT_KEY, {
@@ -353,7 +284,7 @@ exports.checkAndStoreUser = async (req, res) => {
     res.cookie('jwt', token, {
       httpOnly: true,
       maxAge: 60 * 60 * 1000,
-      domain: 'localhost',
+      domain: cookieDomain,
       secure: false,
     });
 
