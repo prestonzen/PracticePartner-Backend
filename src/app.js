@@ -45,7 +45,9 @@ const db = new Firestore({
 app.use(bodyParser.json());
 
 app.use((req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', 'https://practicepartner.ai');
+  res.setHeader('Access-Control-Allow-Origin',
+  //  'https://practicepartner.ai'
+  'https://practice-partner-frontend-xi.vercel.app');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   next();
@@ -56,11 +58,12 @@ const corsOptions = {
   origin: [
     'http://localhost:3001',
     'http://localhost:3000',
-    'https://practicepartner.kaizenapps.com',
-    'https://practicepartner.ai',
-    'https://married-dolls-cashiers-puts.trycloudflare.com',
+    // 'https://practicepartner.kaizenapps.com',
+    // 'https://practicepartner.ai',
+    // 'https://married-dolls-cashiers-puts.trycloudflare.com',
+    'https://practice-partner-frontend-xi.vercel.app',
   ], // Allow requests from this origin
-  methods: 'GET,POST', // Allow only GET and POST requests
+  methods: ['GET,POST'], // Allow only GET and POST requests
   allowedHeaders: 'Content-Type,Authorization', // Allow only these headers
 };
 

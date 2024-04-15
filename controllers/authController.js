@@ -12,7 +12,7 @@ const stripe = require('stripe')(
 );
 
 const jwt = require('jsonwebtoken');
-const cookieDomain = 'localhost';
+const cookieDomain = '.vercel.app';
 
 exports.signup = async (req, res) => {
   try {
