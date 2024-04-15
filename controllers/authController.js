@@ -293,3 +293,9 @@ exports.checkAndStoreUser = async (req, res) => {
     res.status(500).send({ error: 'Internal server error' });
   }
 };
+
+
+exports.testing = async (req, res) => {
+  console.log("working");
+  res.send({msg: "working"});
+};

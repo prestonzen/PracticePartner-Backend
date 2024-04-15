@@ -9,6 +9,7 @@ const {
   authenticate,
   checkAndStoreUser,
   verifyEmail,
+  testing
 } = require('../controllers/authController');
 
 router.post('/signup', signup);
@@ -22,5 +23,6 @@ router.get('/verify', verifyEmail);
 router.post('/forget-password', forgetPassword);
 
 router.get('/authenticate', authenticate);
+router.get('/', testing);
 
 module.exports = router;
