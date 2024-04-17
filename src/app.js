@@ -44,17 +44,24 @@ const db = new Firestore({
 
 // Middlewares
 app.use(bodyParser.json());
+app.use(function (req, res, next) {
 
-// app.use((req, res, next) => {
-//   res.setHeader('Access-Control-Allow-Origin',
-//   '*',
-//   //  'https://practicepartner.ai'
-//   // 'https://practice-partner-frontend-xi.vercel.app'
-// );
-//   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
-//   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-//   next();
-// });
+  // Website you wish to allow to connect
+  res.setHeader('Access-Control-Allow-Origin', FRONTEND_URL);
+
+  // Request methods you wish to allow
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+
+  // Request headers you wish to allow
+  res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
+
+  // Set to true if you need the website to include cookies in the requests sent
+  // to the API (e.g. in case you use sessions)
+  res.setHeader('Access-Control-Allow-Credentials', true);
+
+  // Pass to next layer of middleware
+  next();
+});
 
 const corsOptions = {
   credentials: true,
