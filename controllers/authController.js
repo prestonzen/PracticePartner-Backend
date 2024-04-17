@@ -130,7 +130,7 @@ exports.login = async (req, res) => {
       httpOnly: true,
       maxAge: 60 * 60 * 1000,
       domain: cookieDomain,
-      secure: false,
+      secure: true,
     });
 
     return res.status(200).json({ isAdmin: isAdmin, email: responseData.email });
