@@ -40,7 +40,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 const db = new Firestore({
   projectId: 'practice-partner-ab0ef',
   keyFilename:
-    './practice-partner-ab0ef-firebase-adminsdk-9ic5b-9a4bf13548.json',
+    '../practice-partner-ab0ef-firebase-adminsdk-9ic5b-9a4bf13548.json',
 });
 
 // Middlewares
