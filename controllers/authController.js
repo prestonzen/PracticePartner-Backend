@@ -131,6 +131,7 @@ exports.login = async (req, res) => {
       maxAge: 60 * 60 * 1000,
       domain: cookieDomain,
       secure: true,
+      sameSite: 'None',
     });
 
     return res.status(200).json({ isAdmin: isAdmin, email: responseData.email });
