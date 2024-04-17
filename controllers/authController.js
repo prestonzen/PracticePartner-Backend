@@ -18,7 +18,7 @@ const stripe = require('stripe')(
 );
 
 const jwt = require('jsonwebtoken');
-const cookieDomain = 'practice-partner-frontend-xi.vercel.app';
+const cookieDomain = '.practice-partner-frontend-xi.vercel.app';
 
 exports.signup = async (req, res) => {
   try {
