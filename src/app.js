@@ -20,6 +20,7 @@ const chatRoutes = require('../routes/chatRoutes');
 const userManagementRoutes = require('../routes/userManagementRoutes');
 const authMiddleware = require('../middlewares/sessionMiddleware');
 
+const FRONTEND_URL='https://practice-partner-frontend-xi.vercel.app'
 // app.use(
 //   session({
 //     secret: 'e04e8fab-c337-48bb-be63-d1c23b891be6', // Replace with your actual session secret
@@ -57,14 +58,7 @@ app.use(bodyParser.json());
 
 const corsOptions = {
   credentials: true,
-  origin: [
-    'http://localhost:3001',
-    'http://localhost:3000',
-    // 'https://practicepartner.kaizenapps.com',
-    // 'https://practicepartner.ai',
-    // 'https://married-dolls-cashiers-puts.trycloudflare.com',
-    'https://practice-partner-frontend-xi.vercel.app',
-  ], // Allow requests from this origin
+  origin: FRONTEND_URL, // Allow requests from this origin
   methods: ['GET,POST'], // Allow only GET and POST requests
   allowedHeaders: 'Content-Type,Authorization', // Allow only these headers
 };
@@ -110,7 +104,7 @@ app.post('/create-stripe-session-subscription', async (req, res) => {
 
       const stripeSession = await stripe.billingPortal.sessions.create({
         customer: customer.id,
-        return_url: 'http://localhost:3001/',
+        return_url: FRONTEND_URL,
       });
       return res.status(409).json({ redirectUrl: stripeSession.url });
     }
@@ -141,8 +135,8 @@ app.post('/create-stripe-session-subscription', async (req, res) => {
   });
   // Now create the Stripe checkout session with the customer ID
   const session = await stripe.checkout.sessions.create({
-    success_url: 'http://localhost:3001/',
-    cancel_url: 'http://localhost:3001/plan',
+    success_url: FRONTEND_URL,
+    cancel_url: `${FRONTEND_URL}/plan`,
     // payment_method_types: ["card"],
     mode: 'subscription',
     billing_address_collection: 'auto',
