@@ -19,6 +19,9 @@ const imageRoutes = require('../routes/imageRoutes');
 const chatRoutes = require('../routes/chatRoutes');
 const userManagementRoutes = require('../routes/userManagementRoutes');
 const authMiddleware = require('../middlewares/sessionMiddleware');
+const serviceAccount = JSON.parse(
+  process.env.FIREBASE_SERVICE_ACCOUNT_KEY
+);
 
 const FRONTEND_URL='https://practice-partner-frontend-xi.vercel.app'
 // app.use(
@@ -38,8 +41,8 @@ app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 const db = new Firestore({
   projectId: 'practice-partner-ab0ef',
-  keyFilename:
-    './practice-partner-ab0ef-firebase-adminsdk-9ic5b-9a4bf13548.json',
+  keyFilename: serviceAccount,
+    // './practice-partner-ab0ef-firebase-adminsdk-9ic5b-9a4bf13548.json',
 });
 
 // Middlewares
