@@ -6,6 +6,7 @@ const { sessionMiddleware } = require('../middlewares/sessionMiddleware');
 // const firebaseConfig = require('../config/firebase');
 const Firestore = require('@google-cloud/firestore');
 const errorMiddleware = require('../middlewares/errorMiddleware');
+
 const stripe = require('stripe')(
   'sk_test_51OwpTS01Mx8CmgRTDrqwtjvL6AM18K1Pp2MYILW2d7P9Ebf3mMl9AdCFiDwoTEAx5NEqGJZhdHCtg9ayWTS8hN3l00tSitWqde'
 );
@@ -19,7 +20,9 @@ const imageRoutes = require('../routes/imageRoutes');
 const chatRoutes = require('../routes/chatRoutes');
 const userManagementRoutes = require('../routes/userManagementRoutes');
 const authMiddleware = require('../middlewares/sessionMiddleware');
-
+const projectId = process.env.GOOGLE_PROJECT_ID;
+const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
+const key = process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n');
 
 const FRONTEND_URL='https://practice-partner-frontend-xi.vercel.app'
 // app.use(
@@ -38,9 +41,11 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 const db = new Firestore({
-  projectId: 'practice-partner-ab0ef',
-  keyFilename:
-    '../practice-partner-ab0ef-firebase-adminsdk-9ic5b-9a4bf13548.json',
+  projectId: projectId,
+  credentials: {
+    client_email: email,
+    private_key: key,
+  },
 });
 
 // Middlewares
