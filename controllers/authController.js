@@ -5,20 +5,26 @@ const nodemailer = require('nodemailer');
 
 const projectId = process.env.GOOGLE_PROJECT_ID;
 const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
-const key = process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n');
+// const key = process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n');
+// const db = new Firestore({
+//   projectId: projectId,
+//   credentials: {
+//     client_email: email,
+//     private_key: key,
+//   },
+// });
 const db = new Firestore({
-  projectId: projectId,
-  credentials: {
-    client_email: email,
-    private_key: key,
-  },
+  projectId: 'practice-partner-ab0ef',
+  keyFilename:
+    './practice-partner-ab0ef-firebase-adminsdk-9ic5b-9a4bf13548.json',
 });
 const stripe = require('stripe')(
   'sk_test_51OwpTS01Mx8CmgRTDrqwtjvL6AM18K1Pp2MYILW2d7P9Ebf3mMl9AdCFiDwoTEAx5NEqGJZhdHCtg9ayWTS8hN3l00tSitWqde'
 );
 
 const jwt = require('jsonwebtoken');
-const cookieDomain = '.practice-partner-frontend-xi.vercel.app';
+// const cookieDomain = '.practice-partner-frontend-xi.vercel.app';
+const cookieDomain = '.practicepartner.ai';
 
 exports.signup = async (req, res) => {
   try {
