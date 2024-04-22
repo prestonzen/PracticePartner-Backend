@@ -22,60 +22,33 @@ const userManagementRoutes = require('../routes/userManagementRoutes');
 const authMiddleware = require('../middlewares/sessionMiddleware');
 const projectId = process.env.GOOGLE_PROJECT_ID;
 const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
-// const key = process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n');
+const key = process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n');
 
 // const FRONTEND_URL='https://practice-partner-frontend-xi.vercel.app'
 // const FRONTEND_URL='http://localhost:3001'
 const FRONTEND_URL='https://www.practicepartner.ai'
-// app.use(
-//   session({
-//     secret: 'e04e8fab-c337-48bb-be63-d1c23b891be6', // Replace with your actual session secret
-//     resave: false,
-//     saveUninitialized: false,
-//     store: store,
-//   })
-// );
-// app.use(authMiddleware);
+
 app.use(cookieParser());
-// app.use((req, res, next) => {
-//   console.log(store);
-// });
+
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-// const db = new Firestore({
-//   projectId: projectId,
-//   credentials: {
-//     client_email: email,
-//     private_key: key,
-//   },
-// });
-
 const db = new Firestore({
-  projectId: 'practice-partner-ab0ef',
-  keyFilename:
-    './practice-partner-ab0ef-firebase-adminsdk-9ic5b-9a4bf13548.json',
+  projectId: projectId,
+  credentials: {
+    client_email: email,
+    private_key: key,
+  },
 });
+
+// const db = new Firestore({
+//   projectId: 'practice-partner-ab0ef',
+//   keyFilename:
+//     './practice-partner-ab0ef-firebase-adminsdk-9ic5b-9a4bf13548.json',
+// });
 
 // Middlewares
 app.use(bodyParser.json());
-// app.use(function (req, res, next) {
 
-//   // Website you wish to allow to connect
-//   res.setHeader('Access-Control-Allow-Origin', FRONTEND_URL);
-
-//   // Request methods you wish to allow
-//   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
-
-//   // Request headers you wish to allow
-//   res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
-
-//   // Set to true if you need the website to include cookies in the requests sent
-//   // to the API (e.g. in case you use sessions)
-//   res.setHeader('Access-Control-Allow-Credentials', true);
-
-//   // Pass to next layer of middleware
-//   next();
-// });
 
 const corsOptions = {
   credentials: true,

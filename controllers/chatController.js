@@ -6,19 +6,19 @@ const { MemoryStore } = require('express-session');
 
 const projectId = process.env.GOOGLE_PROJECT_ID;
 const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
-// const key = process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n');
-// const db = new Firestore({
-//   projectId: projectId,
-//   credentials: {
-//     client_email: email,
-//     private_key: key,
-//   },
-// });
+const key = process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n');
 const db = new Firestore({
-  projectId: 'practice-partner-ab0ef',
-  keyFilename:
-    './practice-partner-ab0ef-firebase-adminsdk-9ic5b-9a4bf13548.json',
+  projectId: projectId,
+  credentials: {
+    client_email: email,
+    private_key: key,
+  },
 });
+// const db = new Firestore({
+//   projectId: 'practice-partner-ab0ef',
+//   keyFilename:
+//     './practice-partner-ab0ef-firebase-adminsdk-9ic5b-9a4bf13548.json',
+// });
 
 
 
