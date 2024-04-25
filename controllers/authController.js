@@ -24,7 +24,7 @@ const stripe = require('stripe')(
 
 const jwt = require('jsonwebtoken');
 // const cookieDomain = '.practice-partner-frontend-xi.vercel.app';
-const cookieDomain = '.practicepartner.ai';
+const cookieDomain = '.vercel.app';
 
 exports.signup = async (req, res) => {
   try {
@@ -137,7 +137,7 @@ exports.login = async (req, res) => {
       maxAge: 60 * 60 * 1000,
       domain: cookieDomain,
       secure: true,
-      sameSite: 'None',
+      sameSite: "none",
     });
 
     return res.status(200).json({ isAdmin: isAdmin, email: responseData.email });

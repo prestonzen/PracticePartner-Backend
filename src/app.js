@@ -26,8 +26,8 @@ const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
 const key = process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n');
 
 // const FRONTEND_URL='https://practice-partner-frontend-xi.vercel.app'
-// const FRONTEND_URL='http://localhost:3001'
-const FRONTEND_URL='https://www.practicepartner.ai'
+const FRONTEND_URL='http://localhost:3001'
+// const FRONTEND_URL='https://www.practicepartner.ai'
 
 app.use(cookieParser());
 
