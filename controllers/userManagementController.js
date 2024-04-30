@@ -22,7 +22,7 @@ exports.getUsers = async (req, res, next) => {
     try {
       const snapshot = await db.collection('users').get();
 
-      if (!snapshot.exists) {
+      if (snapshot.empty) {
         res.json({ users:[], activeUsers:0, inactiveUsers:0 });
         // Continue with token generation and response
       }
@@ -33,7 +33,7 @@ exports.getUsers = async (req, res, next) => {
         // const endDate = endDateTimestamp.toDate();
 
       users.push({
-        mail: doc.email,
+        mail: doc.data().email,
         startDate: "1",
         expirationDate: endDate,
         subscriptionTerm: "Q",
