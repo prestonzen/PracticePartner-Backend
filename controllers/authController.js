@@ -113,10 +113,11 @@ exports.login = async (req, res) => {
     console.log('Firebase API response:', responseData);
 
     let isAdmin = false;
-    // console.log(response.data.email);
-    if (response.data.email === process.env.ADMIN_EMAIL) {
+    const adminEmails = process.env.ADMIN_EMAILS.split(',');
+
+    if (adminEmails.includes(response.data.email)) {
       isAdmin = true;
-      console.log(isAdmin);
+      // console.log(isAdmin);
     }
     // Ensure userData is correctly structured with required user data
     const userData = {
@@ -314,7 +315,9 @@ exports.checkAndStoreUser = async (req, res) => {
     }
 
     let isAdmin = false;
-    if (userData.email === process.env.ADMIN_EMAIL) {
+    const adminEmails = process.env.ADMIN_EMAILS.split(',');
+
+    if (adminEmails.includes(response.data.email)) {
       isAdmin = true;
     }
 
@@ -323,7 +326,8 @@ exports.checkAndStoreUser = async (req, res) => {
       name: userData.name,
       isAdmin: isAdmin,
       isFree: true,
-      freePrompts: 10,
+      freePrompts: 100,
+      subscriptionMonth: new Date().getMonth(),
     };
 
     const token = jwt.sign(userDataG, process.env.JWT_KEY, {
