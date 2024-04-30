@@ -35,7 +35,8 @@ exports.signup = async (req, res) => {
       email: req.body.email,
       password: req.body.password,
       isFree: true,
-      freePrompts: 10,
+      freePrompts: 100,
+      subscriptionMonth: new Date().getMonth(),
       ...(req.body.additionalData || {}),
       emailVerified: false, // Adding email verification status
     };
@@ -149,6 +150,18 @@ exports.login = async (req, res) => {
         // console.log(isSubscribed);
       }
     }
+    const currentMonth = new Date().getMonth();
+    const subscriptionMonth = loggedinUserData.subscriptionMonth;
+    if (subscriptionMonth !== currentMonth) {
+      // Update free prompts to 100 for the new month
+      await db
+      .collection("users")
+      .doc(responseData.email)
+      .update({
+        freePrompts: 100,
+        subscriptionMonth: currentMonth
+      });
+  }
 
     // Send JWT to client (e.g., set as HTTP-only cookie)
     res.cookie("jwt", token, {
@@ -157,6 +170,7 @@ exports.login = async (req, res) => {
       // domain: cookieDomain,
       secure: true,
       sameSite: "none",
+      partitioned: true
     });
 
     return res
