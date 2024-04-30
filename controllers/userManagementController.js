@@ -20,15 +20,20 @@ const db = new Firestore({
 
 exports.getUsers = async (req, res, next) => {
     try {
-      const snapshot = await db.collection('subscriptions').get();
+      const snapshot = await db.collection('users').get();
+
+      if (!snapshot.exists) {
+        res.json({ users:[], activeUsers:0, inactiveUsers:0 });
+        // Continue with token generation and response
+      }
     // const snapshot = await db.collection('users').get();
     const users = [];
     snapshot.forEach((doc) => {
-        const endDateTimestamp = doc.data().endDate;
-  const endDate = endDateTimestamp.toDate();
+        // const endDateTimestamp = doc.data().endDate;
+        // const endDate = endDateTimestamp.toDate();
 
       users.push({
-        mail: doc.id,
+        mail: doc.email,
         startDate: "1",
         expirationDate: endDate,
         subscriptionTerm: "Q",

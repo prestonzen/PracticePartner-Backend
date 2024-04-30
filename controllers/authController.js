@@ -333,16 +333,44 @@ exports.checkAndStoreUser = async (req, res) => {
     const token = jwt.sign(userDataG, process.env.JWT_KEY, {
       expiresIn: '1h',
     });
-    console.log('JWT Token:', token);
+    // console.log('JWT Token:', token);
 
     res.cookie('jwt', token, {
       httpOnly: true,
       maxAge: 60 * 60 * 1000,
-      domain: cookieDomain,
-      secure: false,
+      // domain: cookieDomain,
+      secure: true,
+      sameSite: "none",
+      partitioned: true
     });
 
-    return res.status(200).json({ isAdmin: isAdmin });
+    const loggedinUserData = userDoc.data();
+    let isSubscribed = false;
+    if (loggedinUserData.freePrompts > 0) {
+      isSubscribed = true;
+    } else {
+      const stripeCustomerId = loggedinUserData.stripeCustomerId;
+
+      if (stripeCustomerId) {
+        const subscriptions = await stripe.subscriptions.list({
+          customer: stripeCustomerId,
+          status: 'active',
+        });
+        // console.log(subscriptions);
+
+        if (subscriptions.data.length > 0) {
+          // console.log("accessed");
+          isSubscribed = true;
+        }
+        // console.log(isSubscribed);
+      }
+    }
+
+    return res.status(200).json({
+      isAdmin: isAdmin,
+      email: userData.email,
+      isSubscribed: isSubscribed,
+    });
   } catch (error) {
     res.status(500).send({ error: 'Internal server error' });
   }
