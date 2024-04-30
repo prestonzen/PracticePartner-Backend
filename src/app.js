@@ -25,7 +25,7 @@ const projectId = process.env.GOOGLE_PROJECT_ID;
 const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
 const key = process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n');
 
-const FRONTEND_URL='https://practice-partner-frontend-xi.vercel.app'
+const FRONTEND_URL = 'http://localhost:3001';
 // const FRONTEND_URL='https://www.practicepartner.ai'
 
 app.use(cookieParser());
@@ -49,11 +49,10 @@ const db = new Firestore({
 // Middlewares
 app.use(bodyParser.json());
 
-
 const corsOptions = {
   credentials: true,
   origin: FRONTEND_URL, // Allow requests from this origin
-  methods: ['GET','POST'], // Allow only GET and POST requests
+  methods: ['GET', 'POST'], // Allow only GET and POST requests
   allowedHeaders: 'Content-Type,Authorization', // Allow only these headers
 };
 
