@@ -38,7 +38,7 @@ exports.signup = async (req, res) => {
       freePrompts: 100,
       subscriptionMonth: new Date().getMonth(),
       ...(req.body.additionalData || {}),
-      emailVerified: false, // Adding email verification status
+      emailVerified: false,
     };
 
     // Add user document to Firestore, associating it with the newly registered user
@@ -310,14 +310,22 @@ exports.checkAndStoreUser = async (req, res) => {
     const userDoc = await db.collection('users').doc(userData.email).get();
 
     if (!userDoc.exists) {
-      await db.collection('users').doc(userData.email).set(userData);
+      const userD = {
+        name: userData.name,
+        email: userData.email,
+        isFree: true,
+        freePrompts: 100,
+        subscriptionMonth: new Date().getMonth(),
+        emailVerified: true,
+      };
+      await db.collection('users').doc(userData.email).set(userD);
       // Continue with token generation and response
     }
 
     let isAdmin = false;
     const adminEmails = process.env.ADMIN_EMAILS.split(',');
 
-    if (adminEmails.includes(response.data.email)) {
+    if (adminEmails.includes(userData.email)) {
       isAdmin = true;
     }
 
@@ -325,10 +333,8 @@ exports.checkAndStoreUser = async (req, res) => {
       email: userData.email,
       name: userData.name,
       isAdmin: isAdmin,
-      isFree: true,
-      freePrompts: 100,
-      subscriptionMonth: new Date().getMonth(),
     };
+
 
     const token = jwt.sign(userDataG, process.env.JWT_KEY, {
       expiresIn: '1h',
@@ -345,10 +351,26 @@ exports.checkAndStoreUser = async (req, res) => {
     });
 
     const loggedinUserData = userDoc.data();
+
+    const currentMonth = new Date().getMonth();
+    const subscriptionMonth = loggedinUserData.subscriptionMonth;
+    let free=false;
+    if (subscriptionMonth !== currentMonth) {
+      free=true;
+      await db
+      .collection("users")
+      .doc(responseData.email)
+      .update({
+        freePrompts: 100,
+        subscriptionMonth: currentMonth
+      });
+  }
     let isSubscribed = false;
     if (loggedinUserData.freePrompts > 0) {
       isSubscribed = true;
     } else {
+      if(free){isSubscribed=true;}
+      else{
       const stripeCustomerId = loggedinUserData.stripeCustomerId;
 
       if (stripeCustomerId) {
@@ -364,6 +386,7 @@ exports.checkAndStoreUser = async (req, res) => {
         }
         // console.log(isSubscribed);
       }
+    }
     }
 
     return res.status(200).json({
