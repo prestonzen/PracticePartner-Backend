@@ -49,3 +49,26 @@ exports.getUsers = async (req, res, next) => {
   }
      
   };
+
+exports.subscribeEmail = async (req, res) => {
+    const { email } = req.body;
+
+    // Basic validation
+    if (!email) {
+        return res.status(400).json({ error: 'Invalid email address' });
+    }
+
+    // Check if email is already subscribed
+    const subscriberRef = db.collection('newsletterSubscribers').doc(email);
+    const subscriberDoc = await subscriberRef.get();
+
+    if (subscriberDoc.exists) {
+        return res.status(400).json({ error: 'Email address already subscribed' });
+    }
+
+    // Add email to subscribers collection in Firestore
+    await subscriberRef.set({ email });
+
+    // Send response
+    res.status(200).json({ message: 'Successfully subscribed to newsletter' });
+};

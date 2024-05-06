@@ -5,5 +5,6 @@ const userManagementController = require('../controllers/userManagementControlle
 
 // router.post('/user-management', userManagementController.editUser);
 router.get('/user-management', userManagementController.getUsers);
+router.post('/subscribe-email',userManagementController.subscribeEmail);
 
 module.exports = router;
