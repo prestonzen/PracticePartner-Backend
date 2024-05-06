@@ -10,6 +10,7 @@ const db = new Firestore({
     private_key: key,
   },
 });
+const jwt = require('jsonwebtoken');
 
 // const db = new Firestore({
 //   projectId: 'practice-partner-ab0ef',
@@ -94,3 +95,60 @@ exports.subscribeEmail = async (req, res) => {
     // Send response
     res.status(200).json({ message: 'Successfully subscribed to newsletter' });
 };
+
+exports.getProfileInfo = async (req, res) => {
+  try {
+    const token = req.cookies && req.cookies['jwt'];
+
+    // Check if JWT token exists
+    if (!token) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    // Verify JWT token
+    jwt.verify(token, process.env.JWT_KEY, async (err, decodedToken) => {
+      if (err) {
+        console.log(err.message);
+        res.status(401).json({ error: 'Unauthorized' });
+      } else {
+        // Extract email from decoded token
+        const userEmail = decodedToken.email;
+
+        try {
+          // Query user document based on the email
+          const userDoc = await db.collection('users').doc(userEmail).get();
+
+          if (!userDoc.exists) {
+            return res.status(404).json({ error: 'User not found' });
+          }
+
+          // Extract subscription information from the user document
+          const userData = userDoc.data();
+          const subscriptionInfo = {
+            subscriptionTerm: userData.subscriptionTerm || "",
+            startDate: "",
+            endDate: ""
+          };
+
+          // If startDate and endDate exist, convert them to ISO date format
+          if (userData.startDate && userData.endDate) {
+            const startDateSeconds = userData.startDate._seconds;
+            const endDateSeconds = userData.endDate._seconds;
+            subscriptionInfo.startDate = new Date(startDateSeconds * 1000).toISOString().split('T')[0];
+            subscriptionInfo.endDate = new Date(endDateSeconds * 1000).toISOString().split('T')[0];
+          }
+
+          // Return the subscription information
+          res.json(subscriptionInfo);
+        } catch (error) {
+          console.error('Error fetching subscription info:', error);
+          res.status(500).json({ error: 'Internal server error' });
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error during user authentication:', error);
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
