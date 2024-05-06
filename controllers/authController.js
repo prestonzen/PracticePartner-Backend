@@ -75,7 +75,7 @@ exports.verifyEmail = async (req, res) => {
     };
     // Add user document to Firestore, associating it with the newly registered user
     await db.collection('users').doc(email).set(userData);
-    console.log('Done');
+    // console.log('Done');
     return res.status(200).json(responseData);
   } catch (error) {
     // console.error('Error during email verification:', error);
@@ -129,40 +129,59 @@ exports.login = async (req, res) => {
 
     const token = jwt.sign(userData, process.env.JWT_KEY, { expiresIn: '1h' });
     console.log('JWT Token:', token);
-
-    const loggedinUserData = userDoc.data();
     let isSubscribed = false;
-    if (loggedinUserData.freePrompts > 0) {
-      isSubscribed = true;
-    } else {
-      const stripeCustomerId = loggedinUserData.stripeCustomerId;
+    let startDate, endDate, subscriptionTerm, paymentStatus,freePrompts;
+    const currentMonth = new Date().getMonth();
+    const userSubscriptionMonth = userDoc.data().subscriptionMonth;
 
-      if (stripeCustomerId) {
+     
+      // If subscription month does not match current month, update subscription details
+      if (userDoc.data().stripeCustomerId) {
+        // Fetch subscription details from Stripe
+        const stripeCustomerId = userDoc.data().stripeCustomerId;
         const subscriptions = await stripe.subscriptions.list({
           customer: stripeCustomerId,
           status: 'active',
         });
-        // console.log(subscriptions);
 
         if (subscriptions.data.length > 0) {
-          // console.log("accessed");
+          // If user has active subscription in Stripe, update subscription details
+          const subscription = subscriptions.data[0]; // Assuming user has only one active subscription
+          startDate = new Date(subscription.current_period_start * 1000); // Convert seconds to milliseconds
+          endDate = new Date(subscription.current_period_end * 1000); // Convert seconds to milliseconds
+          subscriptionTerm = subscription.plan.interval;
+          paymentStatus = 'paid';
           isSubscribed = true;
         }
-        // console.log(isSubscribed);
+      } else if (userSubscriptionMonth !== currentMonth) {
+        // If stripeCustomerId is not present, user is a free user
+        startDate = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+        endDate = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
+        subscriptionTerm = 'monthly';
+        paymentStatus = 'paid';
+        isSubscribed = true;
+        freePrompts=100;
+      }else{
+        startDate = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+        endDate = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
+        subscriptionTerm = 'monthly';
+        paymentStatus = 'paid';
+        isSubscribed = true;
+        freePrompts=userDoc.data().freePrompts;
       }
-    }
-    const currentMonth = new Date().getMonth();
-    const subscriptionMonth = loggedinUserData.subscriptionMonth;
-    if (subscriptionMonth !== currentMonth) {
-      // Update free prompts to 100 for the new month
-      await db
-      .collection("users")
-      .doc(responseData.email)
-      .update({
-        freePrompts: 100,
-        subscriptionMonth: currentMonth
+
+      // Update user's subscription details in Firestore
+      await db.collection('users').doc(responseData.email).update({
+        startDate: startDate,
+        endDate: endDate,
+        subscriptionTerm: subscriptionTerm,
+        paymentStatus: paymentStatus,
+        subscriptionMonth: currentMonth,
+        freePrompts: 100, // Reset free prompts if applicable
       });
-  }
+    
+
+
 
     // Send JWT to client (e.g., set as HTTP-only cookie)
     res.cookie('jwt', token, {

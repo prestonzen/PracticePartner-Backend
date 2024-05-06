@@ -19,36 +19,58 @@ const db = new Firestore({
 
 
 exports.getUsers = async (req, res, next) => {
-    try {
-      const snapshot = await db.collection('users').get();
+  try {
+    const snapshot = await db.collection('users').get();
 
-      if (snapshot.empty) {
-        res.json({ users:[], activeUsers:0, inactiveUsers:0 });
-        // Continue with token generation and response
-      }
-    // const snapshot = await db.collection('users').get();
+    if (snapshot.empty) {
+      return res.json({ users:[], activeUsers: 0, inactiveUsers: 0 });
+    }
+
     const users = [];
-    snapshot.forEach((doc) => {
-        // const endDateTimestamp = doc.data().endDate;
-        // const endDate = endDateTimestamp.toDate();
+    let activeUsers = 0;
+    let inactiveUsers = 0;
 
+    snapshot.forEach((doc) => {
+      const userData = doc.data();
+
+      // Assuming there is a field in the user document indicating their subscription status
+      // const isActiveUser = userData.active === true;
+      // var start = new Date(1970, 0, 1);
+      // var end = new Date(1970, 0, 1);
+      // start.setSeconds(userData.startDate);
+      // end.setSeconds(userData.endDate);
+      let startDate, endDate;
+      if(userData.startDate){
+      const startDateSeconds = userData.startDate._seconds;
+      const endDateSeconds = userData.endDate._seconds;
+      startDate = new Date(startDateSeconds * 1000);
+      endDate = new Date(endDateSeconds * 1000);
+      startDate = startDate.toISOString().split('T')[0];
+      endDate = endDate.toISOString().split('T')[0];
+      }
       users.push({
-        mail: doc.data().email,
-        startDate: "1",
-        expirationDate: endDate,
-        subscriptionTerm: "Q",
-        paymentStatus: "2"
+        mail: userData.email,
+        startDate: userData.startDate ? startDate : "", // Adjust as needed
+        expirationDate: userData.startDate ? endDate : "", // Adjust as needed
+        subscriptionTerm: userData.startDate ? userData.subscriptionTerm : "", // Adjust as needed
+        paymentStatus: userData.startDate ? userData.paymentStatus : "", // Adjust as needed
       });
+
+      // Count active and inactive users
+      // if (isActiveUser) {
+        activeUsers++;
+      // } else {
+      //   inactiveUsers++;
+      // }
     });
-    const activeUsers=3;
-    const inactiveUsers=1;
+
     res.json({ users, activeUsers, inactiveUsers }); // Send the data as JSON response
   } catch (error) {
     console.error('Error fetching users:', error);
     res.status(500).json({ error: 'Internal server error' }); // Send an error response
   }
-     
-  };
+};
+
 
 exports.subscribeEmail = async (req, res) => {
     const { email } = req.body;
