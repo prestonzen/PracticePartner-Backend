@@ -139,6 +139,7 @@ exports.login = async (req, res) => {
       if (userDoc.data().stripeCustomerId) {
         // Fetch subscription details from Stripe
         const stripeCustomerId = userDoc.data().stripeCustomerId;
+        freePrompts=userDoc.data().freePrompts;
         const subscriptions = await stripe.subscriptions.list({
           customer: stripeCustomerId,
           status: 'active',
@@ -177,7 +178,7 @@ exports.login = async (req, res) => {
         subscriptionTerm: subscriptionTerm,
         paymentStatus: paymentStatus,
         subscriptionMonth: currentMonth,
-        freePrompts: 100, // Reset free prompts if applicable
+        freePrompts: freePrompts, // Reset free prompts if applicable
       });
     
 
@@ -327,7 +328,7 @@ exports.checkAndStoreUser = async (req, res) => {
     const userData = req.body;
 
     const userDoc = await db.collection('users').doc(userData.email).get();
-
+    let isSubscribed=false;
     if (!userDoc.exists) {
       const userD = {
         name: userData.name,
@@ -336,9 +337,94 @@ exports.checkAndStoreUser = async (req, res) => {
         freePrompts: 100,
         subscriptionMonth: new Date().getMonth(),
         emailVerified: true,
+        startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+        endDate: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0),
+        subscriptionTerm: 'monthly',
+        paymentStatus: 'paid',
       };
       await db.collection('users').doc(userData.email).set(userD);
+      isSubscribed=true;
       // Continue with token generation and response
+    }
+    else{
+    const loggedinUserData = userDoc.data();
+
+    let free=false;
+    let startDate, endDate, subscriptionTerm, paymentStatus,freePrompts;
+    const currentMonth = new Date().getMonth();
+    const userSubscriptionMonth = userDoc.data().subscriptionMonth;
+
+     
+      // If subscription month does not match current month, update subscription details
+      if (userDoc.data().stripeCustomerId) {
+        // Fetch subscription details from Stripe
+        const stripeCustomerId = userDoc.data().stripeCustomerId;
+        freePrompts=userDoc.data().freePrompts;
+        const subscriptions = await stripe.subscriptions.list({
+          customer: stripeCustomerId,
+          status: 'active',
+        });
+
+        if (subscriptions.data.length > 0) {
+          // If user has active subscription in Stripe, update subscription details
+          const subscription = subscriptions.data[0]; // Assuming user has only one active subscription
+          startDate = new Date(subscription.current_period_start * 1000); // Convert seconds to milliseconds
+          endDate = new Date(subscription.current_period_end * 1000); // Convert seconds to milliseconds
+          subscriptionTerm = subscription.plan.interval;
+          paymentStatus = 'paid';
+          isSubscribed = true;
+        }
+      } else if (userSubscriptionMonth !== currentMonth) {
+        // If stripeCustomerId is not present, user is a free user
+        startDate = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+        endDate = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
+        subscriptionTerm = 'monthly';
+        paymentStatus = 'paid';
+        isSubscribed = true;
+        freePrompts=100;
+      }else{
+        startDate = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+        endDate = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
+        subscriptionTerm = 'monthly';
+        paymentStatus = 'paid';
+        isSubscribed = true;
+        freePrompts=userDoc.data().freePrompts;
+      }
+
+      // Update user's subscription details in Firestore
+      await db.collection('users').doc(userData.email).update({
+        startDate: startDate,
+        endDate: endDate,
+        subscriptionTerm: subscriptionTerm,
+        paymentStatus: paymentStatus,
+        subscriptionMonth: currentMonth,
+        freePrompts: freePrompts, // Reset free prompts if applicable
+      });
+    
+
+
+    if (loggedinUserData.freePrompts > 0) {
+      isSubscribed = true;
+    } else {
+      if(free){isSubscribed=true;}
+      else{
+      const stripeCustomerId = loggedinUserData.stripeCustomerId;
+
+      if (stripeCustomerId) {
+        const subscriptions = await stripe.subscriptions.list({
+          customer: stripeCustomerId,
+          status: 'active',
+        });
+        // console.log(subscriptions);
+
+        if (subscriptions.data.length > 0) {
+          // console.log("accessed");
+          isSubscribed = true;
+        }
+        // console.log(isSubscribed);
+      }
+    }
+    }
     }
 
     let isAdmin = false;
@@ -369,44 +455,7 @@ exports.checkAndStoreUser = async (req, res) => {
       partitioned: true
     });
 
-    const loggedinUserData = userDoc.data();
-
-    const currentMonth = new Date().getMonth();
-    const subscriptionMonth = loggedinUserData.subscriptionMonth;
-    let free=false;
-    if (subscriptionMonth !== currentMonth) {
-      free=true;
-      await db
-      .collection("users")
-      .doc(responseData.email)
-      .update({
-        freePrompts: 100,
-        subscriptionMonth: currentMonth
-      });
-  }
-    let isSubscribed = false;
-    if (loggedinUserData.freePrompts > 0) {
-      isSubscribed = true;
-    } else {
-      if(free){isSubscribed=true;}
-      else{
-      const stripeCustomerId = loggedinUserData.stripeCustomerId;
-
-      if (stripeCustomerId) {
-        const subscriptions = await stripe.subscriptions.list({
-          customer: stripeCustomerId,
-          status: 'active',
-        });
-        // console.log(subscriptions);
-
-        if (subscriptions.data.length > 0) {
-          // console.log("accessed");
-          isSubscribed = true;
-        }
-        // console.log(isSubscribed);
-      }
-    }
-    }
+    
 
     return res.status(200).json({
       isAdmin: isAdmin,
