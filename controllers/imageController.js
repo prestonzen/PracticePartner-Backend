@@ -23,7 +23,7 @@ const db = new Firestore({
 exports.generateImage = async (req, res, next) => {
   try {
     const { prompt } = req.body;
-    const numberOfImages = 4; // Number of images to generate
+    const numberOfImages = 4; 
 
     const { OPENAI_API_KEY } = process.env;
 

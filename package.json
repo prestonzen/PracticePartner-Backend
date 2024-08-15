@@ -4,7 +4,7 @@
   "description": "Backend of Practice Partner App",
   "main": "./src/app.js",
   "scripts": {
-    "start": "node server.js",
+    "start": "node src/app.js",
     "test": "jest",
     "build": "webpack",
     "prod": "node dist/final.js",
