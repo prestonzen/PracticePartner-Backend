@@ -28,26 +28,37 @@ const jwt = require('jsonwebtoken');
 
 exports.signup = async (req, res) => {
   try {
-    const { email, password, confirmPassword, name } = req.body;
+    const { email, password, name } = req.body;
+
+    // Check if user already exists
+    const userDoc = await db.collection('users').doc(email).get();
+    if (userDoc.exists) {
+      return res.status(409).json({ error: 'User already exists' });
+    }
 
     const userData = {
-      name: req.body.name,
-      email: req.body.email,
-      password: bcrypt.hashSync(req.body.password, 10),
+      name,
+      email,
+      password: bcrypt.hashSync(password, 10),
       isFree: true,
       freePrompts: 100,
       subscriptionMonth: new Date().getMonth(),
-      ...(req.body.additionalData || {}),
+      createdAt: new Date().toISOString(),
       emailVerified: false,
     };
 
-    // Add user document to Firestore, associating it with the newly registered user
-    await db.collection('users').doc(req.body.email).set(userData);
+    // Add user to Firestore
+    await db.collection('users').doc(email).set(userData);
 
-    return res.status(201).json(userData);
+    // Don't send password back in response
+    const { password: _, ...userDataWithoutPassword } = userData;
+    return res.status(201).json(userDataWithoutPassword);
   } catch (error) {
     console.error('Error during user registration:', error);
-    return res.status(500).json({ error: 'Internal Server Error' });
+    return res.status(500).json({ 
+      error: 'Internal Server Error',
+      message: 'Failed to create user account'
+    });
   }
 };
 
