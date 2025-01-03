@@ -6,7 +6,7 @@
         "use": "@vercel/node",
         "config": {
           "functions": {
-            "src/app.js": { "maxDuration": 15 }
+            "src/app.js": { "maxDuration": 30 }
           }
         }
       }
@@ -14,8 +14,13 @@
     "routes": [
       {
         "src": "/(.*)",
-        "dest": "src/app.js"
+        "dest": "src/app.js",
+        "headers": {
+          "Access-Control-Allow-Credentials": "true",
+          "Access-Control-Allow-Origin": "https://practicepartner.ai",
+          "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type,Authorization,Cookie"
+        }
       }
     ]
-    
   }

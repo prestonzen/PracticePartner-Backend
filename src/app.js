@@ -25,10 +25,6 @@ const projectId = process.env.GOOGLE_PROJECT_ID;
 const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
 const key = process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n');
 
-// const FRONTEND_URL = 'https://practice-partner-frontend-xi.vercel.app';
-const FRONTEND_URL = "http://localhost:3001";
-// const FRONTEND_URL='https://www.practicepartner.ai'
-
 app.use(cookieParser());
 
 app.use(express.json());
@@ -52,9 +48,17 @@ app.use(bodyParser.json());
 
 const corsOptions = {
   credentials: true,
-  origin: FRONTEND_URL, 
-  methods: ['GET', 'POST'], 
-  allowedHeaders: 'Content-Type,Authorization', 
+  origin: [
+    'https://www.practicepartner.ai',
+    'https://practicepartner.ai',
+    process.env.NODE_ENV === 'development' ? 'http://localhost:3001' : null
+  ].filter(Boolean),
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
+  exposedHeaders: ['set-cookie'],
+  maxAge: 86400,
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 };
 
 app.use(cors(corsOptions));
